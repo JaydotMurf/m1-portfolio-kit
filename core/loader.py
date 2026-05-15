@@ -8,7 +8,11 @@ Expected columns: Symbol, Name, Quantity, Avg. Price, Cost Basis,
                   Unrealized Gain ($), Unrealized Gain (%), Value
 """
 
+import re
+
 import pandas as pd
+
+_DATE_RE = re.compile(r"(\d{4}-\d{2}-\d{2})")
 
 # Maps M1's raw column names to clean internal names
 M1_COLUMN_MAP = {
@@ -116,3 +120,63 @@ def portfolio_summary(df: pd.DataFrame) -> dict:
         "best_performer":   df.loc[df["unrealized_gain_pct"].idxmax(), "symbol"],
         "worst_performer":  df.loc[df["unrealized_gain_pct"].idxmin(), "symbol"],
     }
+
+
+def parse_snapshot_date(filename: str) -> str | None:
+    """Return the first YYYY-MM-DD found in a filename, or None."""
+    m = _DATE_RE.search(filename)
+    return m.group(1) if m else None
+
+
+def load_snapshots(files, date_map: dict) -> dict:
+    """
+    Load multiple M1 CSV files into a date-keyed dict of DataFrames.
+
+    Parameters
+    ----------
+    files : list of file-like objects (each must have a .name attribute)
+    date_map : dict mapping file.name -> 'YYYY-MM-DD'
+
+    Returns
+    -------
+    dict[str, pd.DataFrame], sorted by date ascending
+    """
+    snapshots = {date_map[f.name]: load_m1_csv(f) for f in files}
+    return dict(sorted(snapshots.items()))
+
+
+def snapshot_diff(snapshots: dict) -> pd.DataFrame:
+    """
+    Compare the oldest and newest snapshot in a snapshots dict.
+
+    Status column values:
+      'held'   — present in both snapshots
+      'new'    — only in the newest snapshot
+      'closed' — only in the oldest snapshot
+    """
+    dates = sorted(snapshots.keys())
+    cols  = ["symbol", "name", "current_value", "unrealized_gain_pct", "portfolio_weight_pct"]
+    old   = snapshots[dates[0]][cols]
+    new   = snapshots[dates[-1]][cols]
+
+    m = old.merge(new, on="symbol", how="outer", suffixes=("_old", "_new"))
+
+    m["status"] = "held"
+    m.loc[m["current_value_old"].isna(), "status"] = "new"
+    m.loc[m["current_value_new"].isna(), "status"] = "closed"
+
+    m["value_change"]     = m["current_value_new"].sub(m["current_value_old"])
+    m["return_change_pp"] = m["unrealized_gain_pct_new"].sub(m["unrealized_gain_pct_old"])
+    m["weight_change_pp"] = m["portfolio_weight_pct_new"].sub(m["portfolio_weight_pct_old"])
+    m["name"]             = m["name_new"].fillna(m["name_old"])
+
+    return (
+        m[[
+            "symbol", "name", "status",
+            "current_value_old", "current_value_new", "value_change",
+            "unrealized_gain_pct_old", "unrealized_gain_pct_new", "return_change_pp",
+            "portfolio_weight_pct_old", "portfolio_weight_pct_new", "weight_change_pp",
+        ]]
+        .sort_values(["status", "value_change"], ascending=[True, False])
+        .reset_index(drop=True)
+    )

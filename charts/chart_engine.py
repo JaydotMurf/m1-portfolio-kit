@@ -194,3 +194,66 @@ def plot_return_vs_weight(df: pd.DataFrame) -> go.Figure:
     )
 
     return _apply_base(fig, "Return % vs Portfolio Weight — Bubble = Position Size", height=520)
+
+
+# ── Phase 2 charts ────────────────────────────────────────────────────────────
+
+def plot_portfolio_timeline(snapshots: dict) -> go.Figure:
+    """Line chart of total portfolio value across snapshots."""
+    dates  = list(snapshots.keys())
+    values = [df["current_value"].sum() for df in snapshots.values()]
+
+    fig = go.Figure(go.Scatter(
+        x             = dates,
+        y             = values,
+        mode          = "lines+markers",
+        line          = dict(color=ACCENT, width=2),
+        marker        = dict(size=8, color=ACCENT),
+        hovertemplate = "<b>%{x}</b><br>Portfolio Value: $%{y:,.2f}<extra></extra>",
+    ))
+
+    fig.update_layout(xaxis_title=None, yaxis_title="Total Value ($)")
+    return _apply_base(fig, "Portfolio Value Over Time")
+
+
+def plot_position_delta(snapshots: dict, symbol: str) -> go.Figure:
+    """Dual-axis line chart of a position's value and portfolio weight across snapshots."""
+    dates, values, weights = [], [], []
+
+    for date_str, df in snapshots.items():
+        row = df[df["symbol"] == symbol]
+        if not row.empty:
+            dates.append(date_str)
+            values.append(float(row.iloc[0]["current_value"]))
+            weights.append(float(row.iloc[0]["portfolio_weight_pct"]))
+
+    fig = go.Figure([
+        go.Scatter(
+            name          = "Current Value ($)",
+            x             = dates,
+            y             = values,
+            mode          = "lines+markers",
+            line          = dict(color=ACCENT, width=2),
+            marker        = dict(size=8),
+            yaxis         = "y1",
+            hovertemplate = "<b>%{x}</b><br>Value: $%{y:,.2f}<extra></extra>",
+        ),
+        go.Scatter(
+            name          = "Portfolio Weight (%)",
+            x             = dates,
+            y             = weights,
+            mode          = "lines+markers",
+            line          = dict(color=MUTED, width=2, dash="dot"),
+            marker        = dict(size=8),
+            yaxis         = "y2",
+            hovertemplate = "<b>%{x}</b><br>Weight: %{y:.1f}%<extra></extra>",
+        ),
+    ])
+
+    fig.update_layout(
+        yaxis  = dict(title="Current Value ($)", gridcolor=GRID, zerolinecolor=GRID),
+        yaxis2 = dict(title="Portfolio Weight (%)", overlaying="y", side="right", showgrid=False),
+        legend = dict(orientation="h", x=0, y=1.08, font=dict(color=TEXT), bgcolor=BG, bordercolor=GRID),
+    )
+
+    return _apply_base(fig, f"{symbol} — Value & Weight Over Time")

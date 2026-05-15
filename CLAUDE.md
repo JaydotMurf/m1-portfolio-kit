@@ -55,4 +55,4 @@ and push to main. Do not commit if any test is failing.
 
 ## Current next step
 
-Phase 1 complete. Next: add a dashboard screenshot to `docs/screenshot.png` and uncomment the image line in README.md, then begin Phase 2 planning.
+Phase 2 complete (steps 2.1–2.4). Next: Phase 3 planning — benchmark overlay on timeline (SPY/QQQ, opt-in network call), concentration metrics tab (HHI, top-N weight, histogram), sector mapping via user-supplied `sector_map.csv`.
