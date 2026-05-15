@@ -152,7 +152,7 @@ else:
     try:
         snapshots = load_snapshots(uploaded_files, date_map)
     except ValueError as e:
-        st.error(f"**Could not parse CSV.**\n\n{e}")
+        st.error(f"**Snapshot date conflict.**\n\n{e}")
         st.stop()
     except Exception as e:
         st.error(f"**Unexpected error:** {e}")

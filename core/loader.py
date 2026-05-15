@@ -8,11 +8,22 @@ Expected columns: Symbol, Name, Quantity, Avg. Price, Cost Basis,
                   Unrealized Gain ($), Unrealized Gain (%), Value
 """
 
+import datetime
 import re
 
 import pandas as pd
 
-_DATE_RE = re.compile(r"(\d{4}-\d{2}-\d{2})")
+_DATE_ISO = re.compile(r"(\d{4}-\d{2}-\d{2})")
+_DATE_MDY = re.compile(
+    r"(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{2})-(\d{4})",
+    re.IGNORECASE,
+)
+_MONTH_MAP = {
+    m: i + 1
+    for i, m in enumerate(
+        ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"]
+    )
+}
 
 # Maps M1's raw column names to clean internal names
 M1_COLUMN_MAP = {
@@ -123,9 +134,17 @@ def portfolio_summary(df: pd.DataFrame) -> dict:
 
 
 def parse_snapshot_date(filename: str) -> str | None:
-    """Return the first YYYY-MM-DD found in a filename, or None."""
-    m = _DATE_RE.search(filename)
-    return m.group(1) if m else None
+    """Return the first parseable date found in a filename as YYYY-MM-DD, or None."""
+    m = _DATE_ISO.search(filename)
+    if m:
+        return m.group(1)
+    m = _DATE_MDY.search(filename)
+    if m:
+        month = _MONTH_MAP[m.group(1).lower()]
+        day   = int(m.group(2))
+        year  = int(m.group(3))
+        return datetime.date(year, month, day).isoformat()
+    return None
 
 
 def load_snapshots(files, date_map: dict) -> dict:
@@ -134,13 +153,26 @@ def load_snapshots(files, date_map: dict) -> dict:
 
     Parameters
     ----------
-    files : list of file-like objects (each must have a .name attribute)
-    date_map : dict mapping file.name -> 'YYYY-MM-DD'
+    files     : list of file-like objects (each must have a .name attribute)
+    date_map  : dict mapping file.name -> 'YYYY-MM-DD'
 
     Returns
     -------
     dict[str, pd.DataFrame], sorted by date ascending
+
+    Raises
+    ------
+    ValueError
+        If two or more files resolve to the same snapshot date.
     """
+    dates = list(date_map.values())
+    if len(dates) != len(set(dates)):
+        from collections import Counter
+        dupes = [d for d, n in Counter(dates).items() if n > 1]
+        raise ValueError(
+            f"Two or more uploaded files map to the same snapshot date: {dupes}. "
+            "Use the date pickers to assign a unique date to each file."
+        )
     snapshots = {date_map[f.name]: load_m1_csv(f) for f in files}
     return dict(sorted(snapshots.items()))
 
