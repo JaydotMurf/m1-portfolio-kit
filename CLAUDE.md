@@ -55,4 +55,4 @@ and push to main. Do not commit if any test is failing.
 
 ## Current next step
 
-Step 1.7 — Final README pass + make repo public (screenshot/GIF, one-command setup block, M1 export instructions, contribution guide link)
+Phase 1 complete. Next: add a dashboard screenshot to `docs/screenshot.png` and uncomment the image line in README.md, then begin Phase 2 planning.

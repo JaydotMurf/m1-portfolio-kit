@@ -1,57 +1,71 @@
-# 📈 M1 Portfolio Kit
+# M1 Portfolio Kit
 
-Better charts for your M1 Finance portfolio. Drop in your holdings CSV,
-get interactive visualizations that M1's built-in interface doesn't offer.
+Better charts for your M1 Finance portfolio. Drop in your holdings CSV and get
+interactive visualizations that M1's built-in interface doesn't offer.
 
-Built with Python, pandas, and Plotly. Runs entirely on your local machine —
-your financial data never leaves your computer.
+Runs entirely on your local machine — your financial data never leaves your computer.
+
+<!-- Replace with a screenshot or GIF of the running dashboard -->
+<!-- ![Dashboard](docs/screenshot.png) -->
+
+---
 
 ## Charts
 
-| Chart | What It Shows |
+| Tab | What it answers |
 |---|---|
-| Allocation | Portfolio weight by current value (donut) |
-| Gain / Loss ($) | Unrealized dollar gain or loss per position |
-| Gain / Loss (%) | Unrealized return % per position, normalized for size |
-| Cost vs Value | What you paid vs what it's worth today |
-| Return vs Weight | Are your biggest positions also your best performers? |
+| 🥧 Allocation | What percentage of my portfolio is each position? |
+| 💵 Gain / Loss ($) | Which positions are making or losing me the most dollars? |
+| 📊 Gain / Loss (%) | Which positions have the best/worst return rate, regardless of size? |
+| ⚖️ Cost vs Value | What did I pay vs what is it worth now? |
+| 🎯 Return vs Weight | Are my biggest positions also my best performers? |
+
+---
 
 ## Setup
 
 Requires Python 3.10+
 
-    git clone https://github.com/JaydotMurf/m1-portfolio-kit.git
-    cd m1-portfolio-kit
-    python -m venv venv
-    source venv/bin/activate   # Windows: venv\Scripts\activate
-    pip install -r requirements.txt
-    streamlit run app.py
+```bash
+git clone https://github.com/JaydotMurf/m1-portfolio-kit.git
+cd m1-portfolio-kit
+python -m venv venv && source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+streamlit run app.py
+```
 
-## Getting Your M1 CSV
+The app opens at `http://localhost:8501`.
 
-1. Log in to M1 Finance
-2. Navigate to Invest → Portfolio → Holdings
-3. Click the ... overflow menu
-4. Select Export CSV
-5. Upload the file in the app
+---
 
-## Project Structure
+## Getting your M1 CSV
 
-    m1-portfolio-kit/
-    ├── app.py               # Streamlit entry point
-    ├── requirements.txt
-    ├── core/
-    │   └── loader.py        # M1 CSV ingestion and normalization
-    ├── charts/
-    │   └── chart_engine.py  # Plotly chart functions
-    └── data/                # Drop CSVs here (gitignored)
+1. Log in to [M1 Finance](https://m1.com)
+2. Go to **Invest → Portfolio → Holdings**
+3. Click the **...** overflow menu (top right of the holdings list)
+4. Select **Export CSV**
+5. Save the file — no renaming needed
+6. Upload it in the app
+
+The export includes all positions with cost basis, current value, and unrealized gain/loss.
+M1 does not include closed positions in this export.
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, test, and PR instructions.
+
+---
 
 ## Roadmap
 
 - [x] Phase 1 — Single snapshot analysis
 - [ ] Phase 2 — Multi-snapshot time-series tracking
 - [ ] Phase 3 — Benchmark comparison (SPY, QQQ)
-- [ ] Phase 4 — Concentration and risk metrics
+- [ ] Phase 4 — Packaging and distribution
+
+---
 
 ## License
 
