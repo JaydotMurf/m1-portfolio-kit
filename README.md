@@ -5,20 +5,19 @@ interactive visualizations that M1's built-in interface doesn't offer.
 
 Runs entirely on your local machine — your financial data never leaves your computer.
 
-<!-- Replace with a screenshot or GIF of the running dashboard -->
-<!-- ![Dashboard](docs/screenshot.png) -->
+![Dashboard](docs/screenshot-02.png)
 
 ---
 
 ## Charts
 
-| Tab | What it answers |
-|---|---|
-| 🥧 Allocation | What percentage of my portfolio is each position? |
-| 💵 Gain / Loss ($) | Which positions are making or losing me the most dollars? |
-| 📊 Gain / Loss (%) | Which positions have the best/worst return rate, regardless of size? |
-| ⚖️ Cost vs Value | What did I pay vs what is it worth now? |
-| 🎯 Return vs Weight | Are my biggest positions also my best performers? |
+| Tab                 | What it answers                                                      |
+| ------------------- | -------------------------------------------------------------------- |
+| 🥧 Allocation       | What percentage of my portfolio is each position?                    |
+| 💵 Gain / Loss ($)  | Which positions are making or losing me the most dollars?            |
+| 📊 Gain / Loss (%)  | Which positions have the best/worst return rate, regardless of size? |
+| ⚖️ Cost vs Value    | What did I pay vs what is it worth now?                              |
+| 🎯 Return vs Weight | Are my biggest positions also my best performers?                    |
 
 ---
 
