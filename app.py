@@ -25,6 +25,7 @@ from charts.chart_engine import (
     plot_gainloss_pct,
     plot_cost_vs_value,
     plot_return_vs_weight,
+    plot_portfolio_radar,
     plot_portfolio_timeline,
     plot_position_delta,
 )
@@ -106,6 +107,44 @@ def _render_raw_table(df) -> None:
         )
 
 
+def _render_position_cards(df) -> None:
+    """
+    Render a compact card grid — 5 cards per row, sorted by current_value descending.
+    Shows: symbol, current value, portfolio weight, return %, gain/loss $.
+    Gain/loss and return are color-coded green/red using design tokens.
+    """
+    sorted_df = df.sort_values("current_value", ascending=False).reset_index(drop=True)
+
+    def _card_html(row) -> str:
+        gain_color   = "#3fb950" if row["unrealized_gain_dollar"] >= 0 else "#f85149"
+        return_color = "#3fb950" if row["unrealized_gain_pct"]    >= 0 else "#f85149"
+        return (
+            "<div style='"
+            "background-color:#161b22;"
+            "border:1px solid #21262d;"
+            "border-radius:8px;"
+            "padding:12px 8px;"
+            "text-align:center;"
+            "font-family:monospace;"
+            "'>"
+            f"<div style='font-size:16px;font-weight:bold;color:#e6edf3;'>{row['symbol']}</div>"
+            f"<div style='font-size:11px;color:#8b949e;margin:3px 0;'>${row['current_value']:,.0f}</div>"
+            f"<div style='font-size:11px;color:#8b949e;'>{row['portfolio_weight_pct']:.1f}%</div>"
+            f"<div style='font-size:13px;color:{return_color};font-weight:bold;margin-top:5px;'>{row['unrealized_gain_pct']:+.1f}%</div>"
+            f"<div style='font-size:11px;color:{gain_color};'>${row['unrealized_gain_dollar']:+,.0f}</div>"
+            "</div>"
+        )
+
+    chunk_size = 5
+    for start in range(0, len(sorted_df), chunk_size):
+        chunk = sorted_df.iloc[start : start + chunk_size]
+        cols  = st.columns(len(chunk))
+        for col, (_, row) in zip(cols, chunk.iterrows()):
+            col.markdown(_card_html(row), unsafe_allow_html=True)
+
+    st.markdown("<div style='margin-bottom:8px'></div>", unsafe_allow_html=True)
+
+
 # ── Phase 1: single-snapshot ──────────────────────────────────────────────────
 if len(uploaded_files) == 1:
     try:
@@ -120,21 +159,25 @@ if len(uploaded_files) == 1:
     summary = portfolio_summary(df)
     _render_metrics(summary)
     st.divider()
+    _render_position_cards(df)
+    st.divider()
     _render_raw_table(df)
 
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "🥧  Allocation",
         "💵  Gain / Loss ($)",
         "📊  Gain / Loss (%)",
         "⚖️  Cost vs Value",
         "🎯  Return vs Weight",
+        "🕸️  Radar",
     ])
 
-    with tab1: st.plotly_chart(plot_allocation(df),       use_container_width=True)
-    with tab2: st.plotly_chart(plot_gainloss_dollar(df),  use_container_width=True)
-    with tab3: st.plotly_chart(plot_gainloss_pct(df),     use_container_width=True)
-    with tab4: st.plotly_chart(plot_cost_vs_value(df),    use_container_width=True)
-    with tab5: st.plotly_chart(plot_return_vs_weight(df), use_container_width=True)
+    with tab1: st.plotly_chart(plot_allocation(df),        use_container_width=True)
+    with tab2: st.plotly_chart(plot_gainloss_dollar(df),   use_container_width=True)
+    with tab3: st.plotly_chart(plot_gainloss_pct(df),      use_container_width=True)
+    with tab4: st.plotly_chart(plot_cost_vs_value(df),     use_container_width=True)
+    with tab5: st.plotly_chart(plot_return_vs_weight(df),  use_container_width=True)
+    with tab6: st.plotly_chart(plot_portfolio_radar(df),   use_container_width=True)
 
 
 # ── Phase 2: multi-snapshot ───────────────────────────────────────────────────

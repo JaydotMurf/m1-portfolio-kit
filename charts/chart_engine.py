@@ -14,6 +14,7 @@ Charts
 5. plot_return_vs_weight — Return % vs portfolio weight scatter
 """
 
+import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
@@ -194,6 +195,123 @@ def plot_return_vs_weight(df: pd.DataFrame) -> go.Figure:
     )
 
     return _apply_base(fig, "Return % vs Portfolio Weight — Bubble = Position Size", height=520)
+
+
+# ── Chart 6: Portfolio Snapshot Radar ────────────────────────────────────────
+def plot_portfolio_radar(df: pd.DataFrame) -> go.Figure:
+    """
+    Portfolio-level radar across 5 CSV-derivable dimensions.
+    All scores normalized to [0, 100]. No external data required.
+
+    Dimensions
+    ----------
+    PERFORMANCE        — weighted-avg unrealized return (by portfolio weight)
+                         Clamped: -50% → 0, +150% → 100
+    WIN RATE           — % of positions with positive unrealized gain
+    DIVERSIFICATION    — inverse HHI; 100 = perfectly equal-weight, 0 = one position
+    CAPITAL EFFICIENCY — total current_value / total cost_basis, clamped 0.5x–2.0x
+    GAIN BREADTH       — gains as % of total absolute P&L; 50 if all positions flat
+    """
+    n = len(df)
+
+    # 1. PERFORMANCE
+    weighted_avg = np.average(
+        df["unrealized_gain_pct"],
+        weights=df["portfolio_weight_pct"],
+    )
+    performance = float(np.clip((weighted_avg + 50) / 200 * 100, 0, 100))
+
+    # 2. WIN RATE
+    win_rate = float((df["unrealized_gain_dollar"] > 0).sum() / n * 100)
+
+    # 3. DIVERSIFICATION — inverse HHI, normalized so equal-weight = 100
+    if n == 1:
+        diversification = 0.0
+    else:
+        hhi = float(((df["portfolio_weight_pct"] / 100) ** 2).sum())
+        diversification = float((1 - hhi) / (1 - 1 / n) * 100)
+
+    # 4. CAPITAL EFFICIENCY
+    ratio = df["current_value"].sum() / df["cost_basis"].sum()
+    capital_efficiency = float(np.clip((ratio - 0.5) / 1.5 * 100, 0, 100))
+
+    # 5. GAIN BREADTH
+    total_abs = df["unrealized_gain_dollar"].abs().sum()
+    if total_abs == 0:
+        gain_breadth = 50.0
+    else:
+        total_gains = (
+            df[df["unrealized_gain_dollar"] > 0]["unrealized_gain_dollar"].sum()
+        )
+        gain_breadth = float(total_gains / total_abs * 100)
+
+    dimensions = [
+        "PERFORMANCE",
+        "WIN RATE",
+        "DIVERSIFICATION",
+        "CAPITAL EFFICIENCY",
+        "GAIN BREADTH",
+    ]
+    scores = [performance, win_rate, diversification, capital_efficiency, gain_breadth]
+
+    # Close the polygon by repeating the first point
+    categories = dimensions + [dimensions[0]]
+    values     = scores     + [scores[0]]
+
+    winners = int((df["unrealized_gain_dollar"] > 0).sum())
+    hover_lines = [
+        f"Weighted avg return: {weighted_avg:+.1f}%",
+        f"Winners: {winners} of {n} positions",
+        f"Top weight: {df['portfolio_weight_pct'].max():.1f}%",
+        f"Value / cost: {ratio:.2f}x",
+        f"Gain share of P&L: {gain_breadth:.0f}%",
+    ]
+    hover_lines_closed = hover_lines + [hover_lines[0]]
+
+    fig = go.Figure(go.Scatterpolar(
+        r             = values,
+        theta         = categories,
+        fill          = "toself",
+        fillcolor     = "rgba(88, 166, 255, 0.15)",
+        line          = dict(color=ACCENT, width=2),
+        marker        = dict(color=ACCENT, size=6),
+        text          = hover_lines_closed,
+        hovertemplate = (
+            "<b>%{theta}</b><br>"
+            "Score: %{r:.0f} / 100<br>"
+            "%{text}<extra></extra>"
+        ),
+    ))
+
+    fig.update_layout(
+        polar=dict(
+            bgcolor     = BG,
+            radialaxis  = dict(
+                visible   = True,
+                range     = [0, 100],
+                tickvals  = [25, 50, 75, 100],
+                tickfont  = dict(color=MUTED, size=10, family=FONT),
+                gridcolor = GRID,
+                linecolor = GRID,
+            ),
+            angularaxis = dict(
+                tickfont  = dict(color=TEXT, size=11, family=FONT),
+                gridcolor = GRID,
+                linecolor = GRID,
+            ),
+        ),
+        paper_bgcolor = PAPER,
+        font          = dict(family=FONT, color=TEXT, size=12),
+        title         = dict(
+            text = "Portfolio Snapshot — 5-Dimension Radar",
+            font = dict(size=14, color=TEXT),
+        ),
+        height    = 520,
+        margin    = dict(t=80, b=40, l=80, r=80),
+        hoverlabel= dict(bgcolor="#161b22", font_color=TEXT, font_family=FONT),
+    )
+
+    return fig
 
 
 # ── Phase 2 charts ────────────────────────────────────────────────────────────
