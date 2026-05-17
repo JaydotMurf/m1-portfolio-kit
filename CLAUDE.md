@@ -39,7 +39,10 @@ All chart and summary code uses these names exclusively:
 - No new packages without updating `requirements.txt` and flagging the addition.
 - No hardcoded tickers or personal holdings data.
 - Write complete runnable code — no placeholders.
-- After completing any implementation step, update the "Current next step" line below.
+
+## Skills
+
+Load and follow ~/.claude/skills/starting-project-session/SKILL.md at the start of every session.
 
 ## Read before starting a session
 
