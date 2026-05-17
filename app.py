@@ -48,9 +48,10 @@ st.markdown("""
         border: 1px solid #21262d;
         border-radius: 8px;
         padding: 16px;
+        overflow: visible;
     }
     [data-testid="stMetricLabel"] { color: #8b949e; font-size: 12px; }
-    [data-testid="stMetricValue"] { color: #e6edf3; }
+    [data-testid="stMetricValue"] { color: #e6edf3; white-space: nowrap; overflow: visible; }
     [data-testid="stMetricDelta"] { font-size: 13px; }
     .stTabs [data-baseweb="tab"] { color: #8b949e; }
     .stTabs [aria-selected="true"] { color: #58a6ff; border-bottom-color: #58a6ff; }
@@ -82,7 +83,7 @@ if not uploaded_files:
 
 
 def _render_metrics(summary: dict) -> None:
-    c1, c2, c3, c4, c5, c6 = st.columns(6)
+    c1, c2, c3, c4, c5, c6 = st.columns([2.5, 2.5, 1, 1, 1, 1.5])
     c1.metric("Total Value",       f"${summary['total_value']:,.2f}")
     c2.metric("Total Gain / Loss", f"${summary['total_gain']:+,.2f}", f"{summary['total_return_pct']:+.2f}%")
     c3.metric("Positions",         summary["positions"])
