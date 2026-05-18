@@ -133,7 +133,7 @@ def _render_raw_table(df) -> None:
     with st.expander("View raw holdings data", expanded=False):
         st.dataframe(
             display_df.style
-            .applymap(color_gain_loss, subset=["Unrealized Gain ($)", "Unrealized Gain (%)"])
+            .map(color_gain_loss, subset=["Unrealized Gain ($)", "Unrealized Gain (%)"])
             .format({
                 "Quantity":              "{:.5f}",
                 "Avg Price":             "${:,.2f}",
