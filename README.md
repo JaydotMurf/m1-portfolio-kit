@@ -9,7 +9,9 @@ Runs entirely on your local machine — your financial data never leaves your co
 
 ---
 
-## Charts
+## Features
+
+### Charts (Five Interactive Tabs)
 
 | Tab                 | What it answers                                                      |
 | ------------------- | -------------------------------------------------------------------- |
@@ -18,6 +20,20 @@ Runs entirely on your local machine — your financial data never leaves your co
 | 📊 Gain / Loss (%)  | Which positions have the best/worst return rate, regardless of size? |
 | ⚖️ Cost vs Value    | What did I pay vs what is it worth now?                              |
 | 🎯 Return vs Weight | Are my biggest positions also my best performers?                    |
+
+### Multi-Snapshot Time-Series Tracking
+
+Upload multiple CSVs to track your portfolio over time:
+- **📅 Timeline** — Line chart of total portfolio value across snapshots
+- **📈 Position Trend** — Track individual position value and weight across time
+- **🔄 Snapshot Diff** — Compare oldest vs newest snapshot side-by-side (new positions, closed positions, value changes)
+
+### User Experience
+
+- **Dark-only theme** — Optimized for financial data visibility, no light mode distraction
+- **Color-coded gains/losses** — Green (▲) for gains, red (▼) for losses in the holdings table
+- **Professional table formatting** — Title-case headers, clean numeric formatting
+- **Local privacy** — All data stays on your machine; no network calls except optional benchmarks (Phase 3)
 
 ---
 
@@ -59,10 +75,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, test, and PR instructions.
 
 ## Roadmap
 
-- [x] Phase 1 — Single snapshot analysis
-- [ ] Phase 2 — Multi-snapshot time-series tracking
-- [ ] Phase 3 — Benchmark comparison (SPY, QQQ)
-- [ ] Phase 4 — Packaging and distribution
+- [x] **Phase 1** — Single snapshot analysis (5 charts, summary metrics, local privacy)
+- [x] **Phase 2** — Multi-snapshot time-series tracking (timeline, position trends, snapshot diffs)
+- [ ] **Phase 3** — Benchmark comparison and risk metrics (SPY/QQQ overlay, HHI, sector mapping)
+- [ ] **Phase 4** — Packaging and distribution (Docker, PyPI, releases)
 
 ---
 

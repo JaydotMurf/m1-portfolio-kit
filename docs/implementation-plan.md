@@ -5,6 +5,17 @@
 
 ---
 
+## Status Summary
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| **Phase 1** | ✅ Complete | All steps 1.1–1.7 done. Recent UX polish: dark-only theme, table color coding, title-case headers. |
+| **Phase 2** | ✅ Complete | All steps 2.1–2.4 done. Multi-CSV time-series tracking fully functional. |
+| **Phase 3** | ⏳ Designed, not started | Benchmark overlays, concentration metrics, sector mapping. Ready to build. |
+| **Phase 4** | ⏳ Not designed | Containerization and package distribution. Deferred until shipping is needed. |
+
+---
+
 ## Guiding Principles
 
 1. **Phase 1 must be fully usable before Phase 2 begins.** No half-built multi-CSV
@@ -95,83 +106,74 @@ Green/red encoding uses `GREEN = "#3fb950"` / `RED = "#f85149"` consistently.
 
 ---
 
-### Step 1.6 — Smoke Test and CI *(next)*
+### Step 1.6 — Smoke Test and CI ✅
 **What:** Automated test that runs on every push.
-**Test file:** `tests/test_loader.py`
-**Covers:**
-- Happy path: 3-row synthetic CSV → correct shape, columns, derived values
-- Missing column: raises `ValueError` with column name in message
-- Comma-formatted currency: parsed correctly
-- Negative gain: `losers` count correct
-- All five chart functions: return non-None `go.Figure`
-
-**CI:** GitHub Actions workflow (`.github/workflows/smoke.yml`)
-- Trigger: push to `main`, PRs
-- Steps: `pip install -r requirements.txt` → `pytest tests/`
+**Status:** Test coverage in place; CI workflow configured.
 
 ---
 
-### Step 1.7 — README and Open-Source Release *(next)*
+### Step 1.7 — README and Open-Source Release ✅
 **What:** Final README pass + repo goes public.
-**README must include:**
-- One-command setup block
-- Screenshot or GIF of the running app
-- M1 CSV export instructions (step-by-step)
-- Contribution guide link
+**Status:** Complete. README includes setup, feature overview, M1 export instructions, and contribution guide.
 
 ---
 
-## Phase 2 — Multi-Snapshot Time-Series Tracking
+## Phase 2 — Multi-Snapshot Time-Series Tracking ✅
 
 **Goal:** Upload multiple CSVs (one per export date) and see portfolio value over time.
-**Constraint:** Phase 1 behavior is unchanged. Multi-CSV is additive, not a rewrite.
+**Status:** All steps 2.1–2.4 complete and tested.
 
 ---
 
-### Step 2.1 — Snapshot Registry
-**What:** A new function `load_snapshots(files: list) -> dict[str, pd.DataFrame]`
-in `core/loader.py`.
-**Behavior:**
-- Accepts a list of uploaded files
-- Extracts the snapshot date from the filename (format: `YYYY-MM-DD_m1_holdings.csv`)
-  or falls back to a date picker per file
-- Returns an ordered dict: `{date_str: normalized_df}`
-
-**No changes to existing `load_m1_csv()` — it is called internally per file.**
+### Step 2.1 — Snapshot Registry ✅
+**What:** `load_snapshots(files: list, date_map: dict) -> dict[str, pd.DataFrame]` in `core/loader.py`.
+**Status:** Complete. Handles ISO date parsing (YYYY-MM-DD), Month-DD-YYYY format, and date picker fallback.
 
 ---
 
-### Step 2.2 — Timeline Chart
+### Step 2.2 — Timeline Chart ✅
 **What:** `plot_portfolio_timeline(snapshots: dict) -> go.Figure` in `chart_engine.py`.
-**Columns used:** Derived — `total_value` per snapshot date (from `portfolio_summary()`).
-**Chart type:** Line chart with markers; x = date, y = total portfolio value.
+**Status:** Complete. Line chart shows total portfolio value across snapshot dates.
 
 ---
 
-### Step 2.3 — Position Delta View
-**What:** `plot_position_delta(snapshots: dict, symbol: str) -> go.Figure`
-**Shows:** `current_value` and `portfolio_weight_pct` for a single ticker across dates.
-**UI:** Dropdown in `app.py` to select the ticker; chart updates reactively.
+### Step 2.3 — Position Delta View ✅
+**What:** `plot_position_delta(snapshots: dict, symbol: str) -> go.Figure` in `chart_engine.py`.
+**Status:** Complete. Dropdown in `app.py` selects ticker; chart updates reactively showing value and weight trends.
 
 ---
 
-### Step 2.4 — Snapshot Comparison Table
-**What:** A new tab "📅 Snapshot Diff" in `app.py`.
-**Shows:** For each position present in both the oldest and newest snapshot:
-- Value change ($), Return change (%), Weight change (pp)
-- New positions (appeared in latest), Closed positions (missing from latest)
+### Step 2.4 — Snapshot Comparison Table ✅
+**What:** New tab "🔄 Snapshot Diff" in `app.py`.
+**Status:** Complete. Shows held positions (with deltas), new positions, and closed positions between oldest and newest snapshot.
 
 ---
 
-## Phase 3 — Benchmark Comparison and Risk Views
+## Phase 3 — Benchmark Comparison and Risk Views ⏳
 
-> Phase 3 is planned but not yet designed in detail. Design begins when Phase 2 ships.
+**Status:** Designed, ready to build. No work started yet.
 
-**Anticipated additions:**
-- Benchmark overlay on timeline chart (SPY/QQQ — requires external data; will be
-  opt-in and clearly flagged as a network call)
-- Concentration metrics tab: HHI, top-N weight, weight distribution histogram
-- Sector mapping via a user-supplied `sector_map.csv` (no hardcoded assumptions)
+**Three additions planned:**
+
+1. **Benchmark overlay on timeline chart**
+   - Shows SPY and/or QQQ performance alongside portfolio value
+   - Requires external data fetch via `yfinance` (opt-in, clearly labeled as network call)
+   - Date range must match snapshot dates
+   - Will add `requirements-optional.txt` for optional dependencies
+
+2. **Concentration metrics tab**
+   - **HHI (Herfindahl-Hirschman Index)** — single number 0–10,000 (perfect diversity = 2,500)
+   - **Top-N weight** — cumulative % of portfolio in top 5/10 positions
+   - **Weight distribution histogram** — visual representation of concentration across all positions
+   - Interactive: slider to adjust N
+
+3. **Sector mapping**
+   - User uploads `sector_map.csv` with columns: `symbol`, `sector`
+   - Donut chart breaks down portfolio by sector (not just by position)
+   - Sector diffs in snapshot comparison (new sectors, closed sectors)
+   - No hardcoded sector assumptions; user-defined mappings only
+
+**Implementation order:** Likely 1 → 2 → 3 (benchmarks require data layer; concentration is pure calculation; sectors require mapping infrastructure)
 
 ---
 
