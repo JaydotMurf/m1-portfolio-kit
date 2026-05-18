@@ -11,6 +11,7 @@ Run locally:
 """
 
 import datetime
+import pandas as pd
 import streamlit as st
 from core.loader import (
     load_m1_csv,
@@ -93,16 +94,54 @@ def _render_metrics(summary: dict) -> None:
 
 
 def _render_raw_table(df) -> None:
+    # Rename columns to professional title case
+    display_df = df.rename(columns={
+        "symbol": "Symbol",
+        "name": "Name",
+        "quantity": "Quantity",
+        "avg_price": "Avg Price",
+        "cost_basis": "Cost Basis",
+        "unrealized_gain_dollar": "Unrealized Gain ($)",
+        "unrealized_gain_pct": "Unrealized Gain (%)",
+        "current_value": "Current Value",
+        "portfolio_weight_pct": "Portfolio Weight (%)",
+    })
+
+    # Custom formatters with directional arrows
+    def format_gain_loss_dollar(val):
+        if pd.isna(val):
+            return ""
+        arrow = "▲" if val > 0 else "▼"
+        return f"{arrow} ${val:+,.2f}"
+
+    def format_gain_loss_pct(val):
+        if pd.isna(val):
+            return ""
+        arrow = "▲" if val > 0 else "▼"
+        return f"{arrow} {val:+.2f}%"
+
+    # Color styling for gain/loss columns
+    def color_gain_loss(val):
+        if pd.isna(val):
+            return ""
+        if val > 0:
+            return "background-color: #3fb950; color: #0d1117; font-weight: bold;"
+        elif val < 0:
+            return "background-color: #f85149; color: #0d1117; font-weight: bold;"
+        return ""
+
     with st.expander("View raw holdings data", expanded=False):
         st.dataframe(
-            df.style.format({
-                "quantity":               "{:.5f}",
-                "avg_price":              "${:,.2f}",
-                "cost_basis":             "${:,.2f}",
-                "unrealized_gain_dollar": "${:+,.2f}",
-                "unrealized_gain_pct":    "{:+.2f}%",
-                "current_value":          "${:,.2f}",
-                "portfolio_weight_pct":   "{:.1f}%",
+            display_df.style
+            .applymap(color_gain_loss, subset=["Unrealized Gain ($)", "Unrealized Gain (%)"])
+            .format({
+                "Quantity":              "{:.5f}",
+                "Avg Price":             "${:,.2f}",
+                "Cost Basis":            "${:,.2f}",
+                "Unrealized Gain ($)":   format_gain_loss_dollar,
+                "Unrealized Gain (%)":   format_gain_loss_pct,
+                "Current Value":         "${:,.2f}",
+                "Portfolio Weight (%)":  "{:.1f}%",
             }),
             use_container_width=True,
         )
