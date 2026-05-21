@@ -10,6 +10,12 @@ pip install -r requirements.txt -r requirements-dev.txt
 streamlit run app.py
 ```
 
+To enable Phase 3 features that require network access (benchmark overlay), install optional dependencies:
+
+```bash
+pip install -r requirements-optional.txt
+```
+
 ## Running tests
 
 ```bash

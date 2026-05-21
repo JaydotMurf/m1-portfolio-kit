@@ -1,4 +1,6 @@
 import io
+from unittest.mock import patch
+import pandas as pd
 import pytest
 import plotly.graph_objects as go
 from core.loader import (
@@ -7,6 +9,7 @@ from core.loader import (
     parse_snapshot_date,
     load_snapshots,
     snapshot_diff,
+    fetch_benchmark,
 )
 from charts.chart_engine import (
     plot_allocation,
@@ -184,3 +187,52 @@ def test_plot_position_delta_held_symbol():
 def test_plot_position_delta_closed_symbol():
     # TSLA only in first snapshot — should still return a valid figure
     assert isinstance(plot_position_delta(make_snapshots(), "TSLA"), go.Figure)
+
+
+# ── Phase 3: fetch_benchmark ──────────────────────────────────────────────────
+
+def _make_bench_df():
+    """Synthetic yfinance-style MultiIndex response for SPY + QQQ."""
+    idx = pd.date_range("2024-01-01", periods=5, freq="B")
+    arrays = [["Close", "Close"], ["SPY", "QQQ"]]
+    cols = pd.MultiIndex.from_arrays(arrays)
+    data = [
+        [400.0, 300.0],
+        [404.0, 303.0],
+        [408.0, 306.0],
+        [412.0, 309.0],
+        [416.0, 312.0],
+    ]
+    return pd.DataFrame(data, index=idx, columns=cols)
+
+
+def test_fetch_benchmark_returns_pct_series():
+    with patch("core.loader._YFINANCE_AVAILABLE", True), \
+         patch("core.loader.yf") as mock_yf:
+        mock_yf.download.return_value = _make_bench_df()
+        result = fetch_benchmark(["SPY", "QQQ"], "2024-01-01", "2024-01-07")
+    assert isinstance(result, dict)
+    assert set(result.keys()) == {"SPY", "QQQ"}
+    assert result["SPY"].iloc[0] == pytest.approx(0.0)
+    assert result["SPY"].iloc[-1] == pytest.approx(4.0)
+
+
+def test_fetch_benchmark_network_error_returns_none():
+    with patch("core.loader._YFINANCE_AVAILABLE", True), \
+         patch("core.loader.yf") as mock_yf:
+        mock_yf.download.side_effect = Exception("timeout")
+        assert fetch_benchmark(["SPY"], "2024-01-01", "2024-01-07") is None
+
+
+def test_fetch_benchmark_unavailable_returns_none():
+    with patch("core.loader._YFINANCE_AVAILABLE", False):
+        assert fetch_benchmark(["SPY"], "2024-01-01", "2024-01-07") is None
+
+
+def test_plot_portfolio_timeline_with_benchmarks_returns_figure():
+    bench_series = pd.Series(
+        [0.0, 2.5, 5.0],
+        index=pd.to_datetime(["2024-01-01", "2024-01-15", "2024-06-01"]),
+    )
+    fig = plot_portfolio_timeline(make_snapshots(), {"SPY": bench_series})
+    assert isinstance(fig, go.Figure)

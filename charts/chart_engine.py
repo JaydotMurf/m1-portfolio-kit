@@ -28,6 +28,7 @@ MUTED     = "#8b949e"
 GREEN     = "#3fb950"
 RED       = "#f85149"
 ACCENT    = "#58a6ff"
+YELLOW    = "#e3b341"
 FONT      = "monospace"
 
 BASE_LAYOUT = dict(
@@ -316,22 +317,70 @@ def plot_portfolio_radar(df: pd.DataFrame) -> go.Figure:
 
 # ── Phase 2 charts ────────────────────────────────────────────────────────────
 
-def plot_portfolio_timeline(snapshots: dict) -> go.Figure:
-    """Line chart of total portfolio value across snapshots."""
-    dates  = list(snapshots.keys())
-    values = [df["current_value"].sum() for df in snapshots.values()]
+def plot_portfolio_timeline(snapshots: dict, benchmarks: dict | None = None) -> go.Figure:
+    """
+    Line chart of total portfolio value across snapshots.
 
-    fig = go.Figure(go.Scatter(
+    When benchmarks is provided (dict[str, pd.Series] of % return series),
+    both portfolio and benchmarks are converted to % return from the first
+    snapshot date and plotted on a shared axis for comparison.
+    """
+    dates  = sorted(snapshots.keys())
+    values = [snapshots[d]["current_value"].sum() for d in dates]
+
+    fig = go.Figure()
+
+    if benchmarks is None:
+        fig.add_trace(go.Scatter(
+            x             = dates,
+            y             = values,
+            mode          = "lines+markers",
+            line          = dict(color=ACCENT, width=2),
+            marker        = dict(size=8, color=ACCENT),
+            hovertemplate = "<b>%{x}</b><br>Portfolio Value: $%{y:,.2f}<extra></extra>",
+        ))
+        fig.update_layout(xaxis_title=None, yaxis_title="Total Value ($)")
+        return _apply_base(fig, "Portfolio Value Over Time")
+
+    # % return mode — normalize portfolio and overlay benchmark traces
+    base_value = values[0]
+    pct_values = [(v / base_value - 1) * 100 for v in values]
+
+    fig.add_trace(go.Scatter(
         x             = dates,
-        y             = values,
+        y             = pct_values,
         mode          = "lines+markers",
+        name          = "Portfolio",
         line          = dict(color=ACCENT, width=2),
         marker        = dict(size=8, color=ACCENT),
-        hovertemplate = "<b>%{x}</b><br>Portfolio Value: $%{y:,.2f}<extra></extra>",
+        hovertemplate = "<b>%{x}</b><br>Portfolio: %{y:+.1f}%<extra></extra>",
     ))
 
-    fig.update_layout(xaxis_title=None, yaxis_title="Total Value ($)")
-    return _apply_base(fig, "Portfolio Value Over Time")
+    bench_colors = [MUTED, YELLOW]
+    for i, (ticker, series) in enumerate(benchmarks.items()):
+        color = bench_colors[i % len(bench_colors)]
+        bench_dates = [
+            d.strftime("%Y-%m-%d") if hasattr(d, "strftime") else str(d)
+            for d in series.index
+        ]
+        fig.add_trace(go.Scatter(
+            x             = bench_dates,
+            y             = list(series.values),
+            mode          = "lines",
+            name          = ticker,
+            line          = dict(color=color, width=1.5, dash="dash"),
+            hovertemplate = f"<b>%{{x}}</b><br>{ticker}: %{{y:+.1f}}%<extra></extra>",
+        ))
+
+    fig.update_layout(
+        xaxis_title = None,
+        yaxis_title = "Return (%)",
+        legend      = dict(
+            orientation = "h", x=0, y=1.08,
+            font=dict(color=TEXT), bgcolor=BG, bordercolor=GRID,
+        ),
+    )
+    return _apply_base(fig, "Portfolio vs Benchmark — % Return")
 
 
 def plot_position_delta(snapshots: dict, symbol: str) -> go.Figure:

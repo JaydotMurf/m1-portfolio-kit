@@ -19,6 +19,7 @@ from core.loader import (
     parse_snapshot_date,
     load_snapshots,
     snapshot_diff,
+    fetch_benchmark,
 )
 from charts.chart_engine import (
     plot_allocation,
@@ -263,7 +264,25 @@ else:
     ])
 
     with tab_timeline:
-        st.plotly_chart(plot_portfolio_timeline(snapshots), use_container_width=True)
+        show_bench = st.checkbox(
+            "Show benchmark comparison — requires internet connection",
+            key="show_benchmarks",
+        )
+        benchmarks = None
+        if show_bench:
+            selected = st.multiselect(
+                "Select benchmarks", ["SPY", "QQQ"], default=["SPY"], key="bench_tickers"
+            )
+            if selected:
+                benchmarks = fetch_benchmark(selected, start=dates[0], end=dates[-1])
+                if benchmarks is None:
+                    st.warning(
+                        "Could not fetch benchmark data. Check your internet connection "
+                        "or install the optional dependency: `pip install yfinance`"
+                    )
+        st.plotly_chart(
+            plot_portfolio_timeline(snapshots, benchmarks), use_container_width=True
+        )
 
     with tab_trend:
         symbol = st.selectbox("Select position", all_symbols, key="trend_symbol")

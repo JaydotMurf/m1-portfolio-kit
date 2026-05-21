@@ -49,6 +49,8 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
+To enable the optional benchmark overlay (SPY/QQQ comparison on the Timeline tab), install the optional dependency: `pip install yfinance`
+
 The app opens at `http://localhost:8501`.
 
 ---

@@ -13,6 +13,13 @@ import re
 
 import pandas as pd
 
+try:
+    import yfinance as yf
+    _YFINANCE_AVAILABLE = True
+except ImportError:
+    yf = None
+    _YFINANCE_AVAILABLE = False
+
 _DATE_ISO = re.compile(r"(\d{4}-\d{2}-\d{2})")
 _DATE_MDY = re.compile(
     r"(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)-(\d{2})-(\d{4})",
@@ -212,3 +219,42 @@ def snapshot_diff(snapshots: dict) -> pd.DataFrame:
         .sort_values(["status", "value_change"], ascending=[True, False])
         .reset_index(drop=True)
     )
+
+
+def fetch_benchmark(tickers: list[str], start: str, end: str) -> dict[str, pd.Series] | None:
+    """
+    Download historical closing prices for benchmark tickers and return each as a
+    % return series normalized from the first available price.
+
+    Parameters
+    ----------
+    tickers : list of ticker symbols, e.g. ["SPY", "QQQ"]
+    start   : start date string 'YYYY-MM-DD'
+    end     : end date string 'YYYY-MM-DD'
+
+    Returns
+    -------
+    dict[str, pd.Series] indexed by pd.Timestamp, values are % return from first price.
+    Returns None if yfinance is not installed, the network call fails, or no data is found.
+    """
+    if not _YFINANCE_AVAILABLE:
+        return None
+    try:
+        raw = yf.download(tickers, start=start, end=end, auto_adjust=True, progress=False)
+        if raw.empty:
+            return None
+        if isinstance(raw.columns, pd.MultiIndex):
+            close = raw["Close"]
+        else:
+            close = raw[["Close"]].rename(columns={"Close": tickers[0]})
+        result = {}
+        for ticker in tickers:
+            if ticker not in close.columns:
+                continue
+            series = close[ticker].dropna()
+            if len(series) == 0:
+                continue
+            result[ticker] = (series / series.iloc[0] - 1) * 100
+        return result or None
+    except Exception:
+        return None
