@@ -9,7 +9,9 @@ Expected columns: Symbol, Name, Quantity, Avg. Price, Cost Basis,
 """
 
 import datetime
+import json
 import re
+from pathlib import Path
 
 import pandas as pd
 
@@ -51,6 +53,15 @@ COMMA_FORMATTED = ["cost_basis", "unrealized_gain_dollar", "current_value"]
 
 # Columns that are plain numerics
 PLAIN_NUMERIC = ["quantity", "avg_price", "unrealized_gain_pct"]
+
+# Sector lookup — loaded once at module scope
+_SECTORS_PATH = Path(__file__).parent / "sectors.json"
+_SECTOR_MAP = json.loads(_SECTORS_PATH.read_text())
+
+
+def _get_sector(symbol: str) -> str:
+    """Return the sector for a ticker, defaulting to 'Other' if unmapped."""
+    return _SECTOR_MAP.get(symbol, "Other")
 
 
 def _clean_numeric(series: pd.Series) -> pd.Series:
@@ -111,6 +122,7 @@ def load_m1_csv(source) -> pd.DataFrame:
     # Derived columns
     total_value = df["current_value"].sum()
     df["portfolio_weight_pct"] = (df["current_value"] / total_value) * 100
+    df["sector"] = df["symbol"].map(_get_sector)
 
     return df
 
