@@ -383,6 +383,48 @@ def plot_portfolio_timeline(snapshots: dict, benchmarks: dict | None = None) -> 
     return _apply_base(fig, "Portfolio vs Benchmark — % Return")
 
 
+def plot_heatmap(df: pd.DataFrame) -> go.Figure:
+    """
+    Treemap heatmap of all positions grouped by sector.
+    Tile area encodes current_value; color encodes unrealized_gain_pct.
+    """
+    root    = "Portfolio"
+    sectors = list(df["sector"].unique())
+
+    labels  = [root] + sectors + list(df["symbol"])
+    parents = [""]   + [root] * len(sectors) + list(df["sector"])
+    values  = [0]    + [0]    * len(sectors) + list(df["current_value"])
+    # Parent nodes use 0 (neutral midpoint); position tiles encode gain/loss
+    colors  = [0.0]  + [0.0]  * len(sectors) + list(df["unrealized_gain_pct"])
+
+    fig = go.Figure(go.Treemap(
+        labels        = labels,
+        parents       = parents,
+        values        = values,
+        marker        = dict(
+            colors     = colors,
+            colorscale = [[0, RED], [0.5, GRID], [1, GREEN]],
+            cmid       = 0,
+            showscale  = True,
+            colorbar   = dict(
+                title      = dict(text="%", font=dict(color=MUTED, size=11, family=FONT)),
+                tickfont   = dict(color=MUTED, size=10, family=FONT),
+                outlinewidth = 0,
+                bgcolor    = BG,
+            ),
+        ),
+        hovertemplate = (
+            "<b>%{label}</b><br>"
+            "Value: $%{value:,.2f}<extra></extra>"
+        ),
+        texttemplate = "<b>%{label}</b>",
+        textfont     = dict(color=TEXT, family=FONT, size=12),
+        tiling       = dict(packing="squarify"),
+    ))
+
+    return _apply_base(fig, "Portfolio Heatmap — Size: Value  ·  Color: Return %", height=560)
+
+
 def plot_position_delta(snapshots: dict, symbol: str) -> go.Figure:
     """Dual-axis line chart of a position's value and portfolio weight across snapshots."""
     dates, values, weights = [], [], []

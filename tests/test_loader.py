@@ -20,6 +20,7 @@ from charts.chart_engine import (
     plot_return_vs_weight,
     plot_portfolio_timeline,
     plot_position_delta,
+    plot_heatmap,
 )
 
 
@@ -224,6 +225,17 @@ def test_compute_snapshot_change_positions():
     result = compute_snapshot_change(make_snapshots())
     assert result["positions_added"] == 1
     assert result["positions_closed"] == 1
+
+
+# ── Phase 3.3: plot_heatmap ───────────────────────────────────────────────────
+
+def test_plot_heatmap_returns_figure():
+    assert isinstance(plot_heatmap(make_df()), go.Figure)
+
+
+def test_plot_heatmap_trace_is_treemap():
+    fig = plot_heatmap(make_df())
+    assert isinstance(fig.data[0], go.Treemap)
 
 
 # ── Phase 3: fetch_benchmark ──────────────────────────────────────────────────
