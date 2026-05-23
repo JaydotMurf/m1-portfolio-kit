@@ -21,6 +21,7 @@ from core.loader import (
     snapshot_diff,
     compute_snapshot_change,
     fetch_benchmark,
+    _YFINANCE_AVAILABLE,
 )
 from charts.chart_engine import (
     plot_allocation,
@@ -406,12 +407,17 @@ else:
                 "Select benchmarks", ["SPY", "QQQ"], default=["SPY"], key="bench_tickers"
             )
             if selected:
-                benchmarks = fetch_benchmark(selected, start=dates[0], end=dates[-1])
+                _bench_end = (
+                    datetime.date.fromisoformat(dates[-1]) + datetime.timedelta(days=1)
+                ).isoformat()
+                benchmarks = fetch_benchmark(selected, start=dates[0], end=_bench_end)
                 if benchmarks is None:
-                    st.warning(
-                        "Could not fetch benchmark data. Check your internet connection "
-                        "or install the optional dependency: `pip install yfinance`"
-                    )
+                    if not _YFINANCE_AVAILABLE:
+                        st.warning("yfinance is not installed. Run: `pip install yfinance`")
+                    else:
+                        st.warning(
+                            "Could not fetch benchmark data — check your internet connection."
+                        )
         st.plotly_chart(
             plot_portfolio_timeline(snapshots, benchmarks), width='stretch'
         )
