@@ -227,6 +227,32 @@ def test_compute_snapshot_change_positions():
     assert result["positions_closed"] == 1
 
 
+# ── Phase 3.5: detail_panel ───────────────────────────────────────────────────
+
+from charts.detail_panel import (
+    plot_position_value,
+    plot_position_cost,
+    plot_position_quantity,
+)
+
+
+def test_plot_position_value_returns_figure():
+    assert isinstance(plot_position_value(make_snapshots(), "AAPL"), go.Figure)
+
+
+def test_plot_position_cost_returns_figure():
+    assert isinstance(plot_position_cost(make_snapshots(), "AAPL"), go.Figure)
+
+
+def test_plot_position_quantity_returns_figure():
+    assert isinstance(plot_position_quantity(make_snapshots(), "AAPL"), go.Figure)
+
+
+def test_detail_panel_sparse_symbol():
+    # TSLA only appears in the first snapshot — should still produce a valid figure
+    assert isinstance(plot_position_value(make_snapshots(), "TSLA"), go.Figure)
+
+
 # ── Phase 3.3: plot_heatmap ───────────────────────────────────────────────────
 
 def test_plot_heatmap_returns_figure():

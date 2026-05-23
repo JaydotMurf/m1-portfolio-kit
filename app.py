@@ -33,6 +33,11 @@ from charts.chart_engine import (
     plot_position_delta,
     plot_heatmap,
 )
+from charts.detail_panel import (
+    plot_position_value,
+    plot_position_cost,
+    plot_position_quantity,
+)
 
 st.set_page_config(
     page_title="M1 Portfolio Kit",
@@ -195,6 +200,43 @@ def _render_position_cards(df) -> None:
     st.markdown("<div style='margin-bottom:8px'></div>", unsafe_allow_html=True)
 
 
+def _render_position_detail(row: pd.Series, snapshots: dict | None = None) -> None:
+    """Detail panel for a clicked heatmap tile."""
+    st.divider()
+    st.subheader(f"{row['symbol']} — {row['name']}")
+    st.caption(f"Sector: {row['sector']}")
+
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Current Value",    f"${row['current_value']:,.2f}")
+    c2.metric("Cost Basis",       f"${row['cost_basis']:,.2f}")
+    c3.metric("Return",           f"{row['unrealized_gain_pct']:+.2f}%",
+                                  f"${row['unrealized_gain_dollar']:+,.2f}")
+    c4.metric("Portfolio Weight", f"{row['portfolio_weight_pct']:.1f}%")
+
+    if snapshots is not None:
+        col_v, col_c, col_q = st.columns(3)
+        symbol = row["symbol"]
+        with col_v:
+            st.plotly_chart(plot_position_value(snapshots, symbol),    use_container_width=True)
+        with col_c:
+            st.plotly_chart(plot_position_cost(snapshots, symbol),     use_container_width=True)
+        with col_q:
+            st.plotly_chart(plot_position_quantity(snapshots, symbol), use_container_width=True)
+
+
+def _heatmap_selection(event, symbol_set: set) -> str | None:
+    """Return the clicked symbol if a position tile was selected, else None."""
+    try:
+        points = event.selection.points
+        if points:
+            label = points[0].get("label", "")
+            if label in symbol_set:
+                return label
+    except (AttributeError, IndexError, TypeError):
+        pass
+    return None
+
+
 # ── Phase 1: single-snapshot ──────────────────────────────────────────────────
 if len(uploaded_files) == 1:
     try:
@@ -222,7 +264,14 @@ if len(uploaded_files) == 1:
     ])
 
     with tab_overview:
-        st.plotly_chart(plot_heatmap(df), use_container_width=True)
+        event = st.plotly_chart(
+            plot_heatmap(df), use_container_width=True,
+            on_select="rerun", selection_mode="points", key="heatmap_single",
+        )
+        selected = _heatmap_selection(event, set(df["symbol"]))
+        if selected:
+            row = df[df["symbol"] == selected].iloc[0]
+            _render_position_detail(row)
         _render_raw_table(df)
     with tab1: st.plotly_chart(plot_allocation(df),        use_container_width=True)
     with tab2: st.plotly_chart(plot_gainloss_dollar(df),   use_container_width=True)
@@ -276,7 +325,14 @@ else:
     ])
 
     with tab_overview:
-        st.plotly_chart(plot_heatmap(latest_df), use_container_width=True)
+        event = st.plotly_chart(
+            plot_heatmap(latest_df), use_container_width=True,
+            on_select="rerun", selection_mode="points", key="heatmap_multi",
+        )
+        selected = _heatmap_selection(event, set(latest_df["symbol"]))
+        if selected:
+            row = latest_df[latest_df["symbol"] == selected].iloc[0]
+            _render_position_detail(row, snapshots)
         _render_raw_table(latest_df)
 
     with tab_timeline:
