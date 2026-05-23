@@ -65,6 +65,46 @@ st.markdown("""
     .stTabs [data-baseweb="tab"] { color: #8b949e; }
     .stTabs [aria-selected="true"] { color: #58a6ff; border-bottom-color: #58a6ff; }
     hr { border-color: #21262d; }
+
+    /* ── Responsive KPI strip (scoped to new dashboard area) ── */
+    .kpi-strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 4px;
+    }
+    .kpi-card {
+        flex: 1 1 140px;
+        background-color: #161b22;
+        border: 1px solid #21262d;
+        border-radius: 8px;
+        padding: 16px;
+        font-family: monospace;
+        min-width: 120px;
+        box-sizing: border-box;
+    }
+    .kpi-label { color: #8b949e; font-size: 12px; margin-bottom: 4px; }
+    .kpi-value { color: #e6edf3; font-size: 20px; font-weight: bold; white-space: nowrap; }
+    .kpi-delta { font-size: 13px; margin-top: 4px; }
+    .kpi-pos   { color: #3fb950; }
+    .kpi-neg   { color: #f85149; }
+    .kpi-neu   { color: #8b949e; }
+
+    /* 3-per-row at ≤ 900 px  →  3×2 */
+    @media (max-width: 900px) {
+        .kpi-card { flex: 1 1 calc(33.33% - 12px); }
+    }
+    /* 2-per-row at ≤ 600 px  →  2×3 */
+    @media (max-width: 600px) {
+        .kpi-card { flex: 1 1 calc(50% - 12px); }
+    }
+    /* 1-per-row at ≤ 480 px  →  1×5 */
+    @media (max-width: 480px) {
+        .kpi-card { flex: 1 1 100%; }
+    }
+
+    /* Prevent horizontal overflow on the heatmap container at narrow viewports */
+    [data-testid="stPlotlyChart"] { overflow-x: hidden; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -92,20 +132,40 @@ if not uploaded_files:
 
 
 def _render_metrics(summary: dict, change: dict | None = None) -> None:
+    def _delta(val: float, text: str) -> str:
+        cls = "kpi-pos" if val > 0 else ("kpi-neg" if val < 0 else "kpi-neu")
+        return f"<div class='kpi-delta {cls}'>{text}</div>"
+
+    def _card(label: str, value: str, delta: str = "") -> str:
+        return (
+            f"<div class='kpi-card'>"
+            f"<div class='kpi-label'>{label}</div>"
+            f"<div class='kpi-value'>{value}</div>"
+            f"{delta}"
+            f"</div>"
+        )
+
     if change is not None:
-        c1, c2, c3, c4, c5 = st.columns([2, 2, 2, 1.5, 1.5])
-        c1.metric("Total Value",      f"${summary['total_value']:,.2f}")
-        c2.metric("Gain / Loss",      f"${summary['total_gain']:+,.2f}", f"{summary['total_return_pct']:+.2f}%")
-        c3.metric("Snapshot Change",  f"${change['delta_dollar']:+,.2f}", f"{change['delta_pct']:+.2f}%")
-        c4.metric("Positions",        summary["positions"])
-        c5.metric("Best Performer",   summary["best_performer"])
+        html = "".join([
+            _card("Total Value",     f"${summary['total_value']:,.2f}"),
+            _card("Gain / Loss",     f"${summary['total_gain']:+,.2f}",
+                  _delta(summary['total_return_pct'], f"{summary['total_return_pct']:+.2f}%")),
+            _card("Snapshot Change", f"${change['delta_dollar']:+,.2f}",
+                  _delta(change['delta_pct'], f"{change['delta_pct']:+.2f}%")),
+            _card("Positions",       str(summary["positions"])),
+            _card("Best Performer",  summary["best_performer"]),
+        ])
     else:
-        c1, c2, c3, c4, c5 = st.columns([2, 2, 1.5, 1.5, 1.5])
-        c1.metric("Total Value",      f"${summary['total_value']:,.2f}")
-        c2.metric("Gain / Loss",      f"${summary['total_gain']:+,.2f}", f"{summary['total_return_pct']:+.2f}%")
-        c3.metric("Positions",        summary["positions"])
-        c4.metric("Best Performer",   summary["best_performer"])
-        c5.metric("Worst Performer",  summary["worst_performer"])
+        html = "".join([
+            _card("Total Value",     f"${summary['total_value']:,.2f}"),
+            _card("Gain / Loss",     f"${summary['total_gain']:+,.2f}",
+                  _delta(summary['total_return_pct'], f"{summary['total_return_pct']:+.2f}%")),
+            _card("Positions",       str(summary["positions"])),
+            _card("Best Performer",  summary["best_performer"]),
+            _card("Worst Performer", summary["worst_performer"]),
+        ])
+
+    st.markdown(f"<div class='kpi-strip'>{html}</div>", unsafe_allow_html=True)
 
 
 def _render_raw_table(df) -> None:
