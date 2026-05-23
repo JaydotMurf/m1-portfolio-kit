@@ -19,6 +19,7 @@ from core.loader import (
     parse_snapshot_date,
     load_snapshots,
     snapshot_diff,
+    compute_snapshot_change,
     fetch_benchmark,
 )
 from charts.chart_engine import (
@@ -30,6 +31,7 @@ from charts.chart_engine import (
     plot_portfolio_radar,
     plot_portfolio_timeline,
     plot_position_delta,
+    plot_heatmap,
 )
 
 st.set_page_config(
@@ -84,14 +86,21 @@ if not uploaded_files:
     st.stop()
 
 
-def _render_metrics(summary: dict) -> None:
-    c1, c2, c3, c4, c5, c6 = st.columns([2.5, 2.5, 1, 1, 1, 1.5])
-    c1.metric("Total Value",       f"${summary['total_value']:,.2f}")
-    c2.metric("Total Gain / Loss", f"${summary['total_gain']:+,.2f}", f"{summary['total_return_pct']:+.2f}%")
-    c3.metric("Positions",         summary["positions"])
-    c4.metric("Winners 🟢",        summary["winners"])
-    c5.metric("Losers 🔴",         summary["losers"])
-    c6.metric("Best Performer",    summary["best_performer"])
+def _render_metrics(summary: dict, change: dict | None = None) -> None:
+    if change is not None:
+        c1, c2, c3, c4, c5 = st.columns([2, 2, 2, 1.5, 1.5])
+        c1.metric("Total Value",      f"${summary['total_value']:,.2f}")
+        c2.metric("Gain / Loss",      f"${summary['total_gain']:+,.2f}", f"{summary['total_return_pct']:+.2f}%")
+        c3.metric("Snapshot Change",  f"${change['delta_dollar']:+,.2f}", f"{change['delta_pct']:+.2f}%")
+        c4.metric("Positions",        summary["positions"])
+        c5.metric("Best Performer",   summary["best_performer"])
+    else:
+        c1, c2, c3, c4, c5 = st.columns([2, 2, 1.5, 1.5, 1.5])
+        c1.metric("Total Value",      f"${summary['total_value']:,.2f}")
+        c2.metric("Gain / Loss",      f"${summary['total_gain']:+,.2f}", f"{summary['total_return_pct']:+.2f}%")
+        c3.metric("Positions",        summary["positions"])
+        c4.metric("Best Performer",   summary["best_performer"])
+        c5.metric("Worst Performer",  summary["worst_performer"])
 
 
 def _render_raw_table(df) -> None:
@@ -200,11 +209,10 @@ if len(uploaded_files) == 1:
     summary = portfolio_summary(df)
     _render_metrics(summary)
     st.divider()
-    _render_position_cards(df)
-    st.divider()
-    _render_raw_table(df)
 
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    (tab_overview,
+     tab1, tab2, tab3, tab4, tab5, tab6) = st.tabs([
+        "🗺️  Overview",
         "🥧  Allocation",
         "💵  Gain / Loss ($)",
         "📊  Gain / Loss (%)",
@@ -213,6 +221,9 @@ if len(uploaded_files) == 1:
         "🕸️  Radar",
     ])
 
+    with tab_overview:
+        st.plotly_chart(plot_heatmap(df), use_container_width=True)
+        _render_raw_table(df)
     with tab1: st.plotly_chart(plot_allocation(df),        use_container_width=True)
     with tab2: st.plotly_chart(plot_gainloss_dollar(df),   use_container_width=True)
     with tab3: st.plotly_chart(plot_gainloss_pct(df),      use_container_width=True)
@@ -244,15 +255,16 @@ else:
 
     latest_df = list(snapshots.values())[-1]
     dates     = sorted(snapshots.keys())
+    change    = compute_snapshot_change(snapshots)
 
-    _render_metrics(portfolio_summary(latest_df))
+    _render_metrics(portfolio_summary(latest_df), change)
     st.divider()
-    _render_raw_table(latest_df)
 
     all_symbols = sorted({sym for df in snapshots.values() for sym in df["symbol"]})
 
-    (tab_timeline, tab_trend, tab_diff,
+    (tab_overview, tab_timeline, tab_trend, tab_diff,
      tab1, tab2, tab3, tab4, tab5) = st.tabs([
+        "🗺️  Overview",
         "📅  Timeline",
         "📈  Position Trend",
         "🔄  Snapshot Diff",
@@ -262,6 +274,10 @@ else:
         "⚖️  Cost vs Value",
         "🎯  Return vs Weight",
     ])
+
+    with tab_overview:
+        st.plotly_chart(plot_heatmap(latest_df), use_container_width=True)
+        _render_raw_table(latest_df)
 
     with tab_timeline:
         show_bench = st.checkbox(
