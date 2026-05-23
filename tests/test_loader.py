@@ -9,6 +9,7 @@ from core.loader import (
     parse_snapshot_date,
     load_snapshots,
     snapshot_diff,
+    compute_snapshot_change,
     fetch_benchmark,
 )
 from charts.chart_engine import (
@@ -62,14 +63,14 @@ def make_snapshots():
 # ── Phase 1: loader ────────────────────────────────────────────────────────────
 
 def test_happy_path_shape():
-    assert make_df().shape == (3, 9)
+    assert make_df().shape == (3, 10)
 
 
 def test_happy_path_columns():
     assert set(make_df().columns) == {
         "symbol", "name", "quantity", "avg_price", "cost_basis",
         "unrealized_gain_dollar", "unrealized_gain_pct", "current_value",
-        "portfolio_weight_pct",
+        "portfolio_weight_pct", "sector",
     }
 
 
@@ -187,6 +188,42 @@ def test_plot_position_delta_held_symbol():
 def test_plot_position_delta_closed_symbol():
     # TSLA only in first snapshot — should still return a valid figure
     assert isinstance(plot_position_delta(make_snapshots(), "TSLA"), go.Figure)
+
+
+# ── Phase 3.2: compute_snapshot_change ───────────────────────────────────────
+
+def test_compute_snapshot_change_keys():
+    result = compute_snapshot_change(make_snapshots())
+    assert set(result.keys()) == {
+        "delta_dollar", "delta_pct", "days_elapsed",
+        "positions_added", "positions_closed",
+    }
+
+
+def test_compute_snapshot_change_delta_dollar():
+    # SAMPLE_CSV total: 2000+900+3000 = 5900
+    # SAMPLE_CSV_2 total: 2700+2750+4000 = 9450 → delta = 3550
+    result = compute_snapshot_change(make_snapshots())
+    assert result["delta_dollar"] == pytest.approx(3550.0)
+
+
+def test_compute_snapshot_change_delta_pct():
+    # 3550 / 5900 * 100 ≈ 60.169
+    result = compute_snapshot_change(make_snapshots())
+    assert result["delta_pct"] == pytest.approx(3550 / 5900 * 100)
+
+
+def test_compute_snapshot_change_days_elapsed():
+    # 2024-01-01 → 2024-06-01 = 152 days (2024 is a leap year)
+    result = compute_snapshot_change(make_snapshots())
+    assert result["days_elapsed"] == 152
+
+
+def test_compute_snapshot_change_positions():
+    # NVDA added, TSLA closed
+    result = compute_snapshot_change(make_snapshots())
+    assert result["positions_added"] == 1
+    assert result["positions_closed"] == 1
 
 
 # ── Phase 3: fetch_benchmark ──────────────────────────────────────────────────

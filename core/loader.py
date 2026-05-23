@@ -233,6 +233,49 @@ def snapshot_diff(snapshots: dict) -> pd.DataFrame:
     )
 
 
+def compute_snapshot_change(snapshots: dict) -> dict:
+    """
+    Summarize the change between the oldest and newest snapshot.
+
+    Parameters
+    ----------
+    snapshots : dict[str, pd.DataFrame]
+        Date-keyed snapshot registry (must contain at least two entries).
+
+    Returns
+    -------
+    dict with keys:
+        delta_dollar      : float — total portfolio value change in dollars
+        delta_pct         : float — total portfolio value change as a percentage
+        days_elapsed      : int   — calendar days between oldest and newest date
+        positions_added   : int   — count of positions in newest but not oldest
+        positions_closed  : int   — count of positions in oldest but not newest
+    """
+    dates = sorted(snapshots.keys())
+    old_df = snapshots[dates[0]]
+    new_df = snapshots[dates[-1]]
+
+    old_value = old_df["current_value"].sum()
+    new_value = new_df["current_value"].sum()
+    delta_dollar = new_value - old_value
+    delta_pct = (delta_dollar / old_value * 100) if old_value else 0.0
+
+    old_date = datetime.date.fromisoformat(dates[0])
+    new_date = datetime.date.fromisoformat(dates[-1])
+    days_elapsed = (new_date - old_date).days
+
+    old_symbols = set(old_df["symbol"])
+    new_symbols = set(new_df["symbol"])
+
+    return {
+        "delta_dollar":     delta_dollar,
+        "delta_pct":        delta_pct,
+        "days_elapsed":     days_elapsed,
+        "positions_added":  len(new_symbols - old_symbols),
+        "positions_closed": len(old_symbols - new_symbols),
+    }
+
+
 def fetch_benchmark(tickers: list[str], start: str, end: str) -> dict[str, pd.Series] | None:
     """
     Download historical closing prices for benchmark tickers and return each as a
