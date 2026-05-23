@@ -218,7 +218,7 @@ def _render_raw_table(df) -> None:
                 "Current Value":         "${:,.2f}",
                 "Portfolio Weight (%)":  "{:.1f}%",
             }),
-            use_container_width=True,
+            width='stretch',
         )
 
 
@@ -277,11 +277,11 @@ def _render_position_detail(row: pd.Series, snapshots: dict | None = None) -> No
         col_v, col_c, col_q = st.columns(3)
         symbol = row["symbol"]
         with col_v:
-            st.plotly_chart(plot_position_value(snapshots, symbol),    use_container_width=True)
+            st.plotly_chart(plot_position_value(snapshots, symbol),    width='stretch')
         with col_c:
-            st.plotly_chart(plot_position_cost(snapshots, symbol),     use_container_width=True)
+            st.plotly_chart(plot_position_cost(snapshots, symbol),     width='stretch')
         with col_q:
-            st.plotly_chart(plot_position_quantity(snapshots, symbol), use_container_width=True)
+            st.plotly_chart(plot_position_quantity(snapshots, symbol), width='stretch')
 
 
 def _heatmap_selection(event, symbol_set: set) -> str | None:
@@ -325,7 +325,7 @@ if len(uploaded_files) == 1:
 
     with tab_overview:
         event = st.plotly_chart(
-            plot_heatmap(df), use_container_width=True,
+            plot_heatmap(df), width='stretch',
             on_select="rerun", selection_mode="points", key="heatmap_single",
         )
         selected = _heatmap_selection(event, set(df["symbol"]))
@@ -333,12 +333,12 @@ if len(uploaded_files) == 1:
             row = df[df["symbol"] == selected].iloc[0]
             _render_position_detail(row)
         _render_raw_table(df)
-    with tab1: st.plotly_chart(plot_allocation(df),        use_container_width=True)
-    with tab2: st.plotly_chart(plot_gainloss_dollar(df),   use_container_width=True)
-    with tab3: st.plotly_chart(plot_gainloss_pct(df),      use_container_width=True)
-    with tab4: st.plotly_chart(plot_cost_vs_value(df),     use_container_width=True)
-    with tab5: st.plotly_chart(plot_return_vs_weight(df),  use_container_width=True)
-    with tab6: st.plotly_chart(plot_portfolio_radar(df),   use_container_width=True)
+    with tab1: st.plotly_chart(plot_allocation(df),        width='stretch')
+    with tab2: st.plotly_chart(plot_gainloss_dollar(df),   width='stretch')
+    with tab3: st.plotly_chart(plot_gainloss_pct(df),      width='stretch')
+    with tab4: st.plotly_chart(plot_cost_vs_value(df),     width='stretch')
+    with tab5: st.plotly_chart(plot_return_vs_weight(df),  width='stretch')
+    with tab6: st.plotly_chart(plot_portfolio_radar(df),   width='stretch')
 
 
 # ── Phase 2: multi-snapshot ───────────────────────────────────────────────────
@@ -386,7 +386,7 @@ else:
 
     with tab_overview:
         event = st.plotly_chart(
-            plot_heatmap(latest_df), use_container_width=True,
+            plot_heatmap(latest_df), width='stretch',
             on_select="rerun", selection_mode="points", key="heatmap_multi",
         )
         selected = _heatmap_selection(event, set(latest_df["symbol"]))
@@ -413,12 +413,12 @@ else:
                         "or install the optional dependency: `pip install yfinance`"
                     )
         st.plotly_chart(
-            plot_portfolio_timeline(snapshots, benchmarks), use_container_width=True
+            plot_portfolio_timeline(snapshots, benchmarks), width='stretch'
         )
 
     with tab_trend:
         symbol = st.selectbox("Select position", all_symbols, key="trend_symbol")
-        st.plotly_chart(plot_position_delta(snapshots, symbol), use_container_width=True)
+        st.plotly_chart(plot_position_delta(snapshots, symbol), width='stretch')
 
     with tab_diff:
         diff_df = snapshot_diff(snapshots)
@@ -447,7 +447,7 @@ else:
                     "portfolio_weight_pct_new": "{:.1f}%",
                     "weight_change_pp":         "{:+.2f}pp",
                 }),
-                use_container_width=True,
+                width='stretch',
             )
 
         if not new.empty:
@@ -460,7 +460,7 @@ else:
                     "unrealized_gain_pct_new":  "{:+.2f}%",
                     "portfolio_weight_pct_new": "{:.1f}%",
                 }),
-                use_container_width=True,
+                width='stretch',
             )
 
         if not closed.empty:
@@ -473,14 +473,14 @@ else:
                     "unrealized_gain_pct_old":  "{:+.2f}%",
                     "portfolio_weight_pct_old": "{:.1f}%",
                 }),
-                use_container_width=True,
+                width='stretch',
             )
 
-    with tab1: st.plotly_chart(plot_allocation(latest_df),       use_container_width=True)
-    with tab2: st.plotly_chart(plot_gainloss_dollar(latest_df),  use_container_width=True)
-    with tab3: st.plotly_chart(plot_gainloss_pct(latest_df),     use_container_width=True)
-    with tab4: st.plotly_chart(plot_cost_vs_value(latest_df),    use_container_width=True)
-    with tab5: st.plotly_chart(plot_return_vs_weight(latest_df), use_container_width=True)
+    with tab1: st.plotly_chart(plot_allocation(latest_df),       width='stretch')
+    with tab2: st.plotly_chart(plot_gainloss_dollar(latest_df),  width='stretch')
+    with tab3: st.plotly_chart(plot_gainloss_pct(latest_df),     width='stretch')
+    with tab4: st.plotly_chart(plot_cost_vs_value(latest_df),    width='stretch')
+    with tab5: st.plotly_chart(plot_return_vs_weight(latest_df), width='stretch')
 
 
 st.divider()
