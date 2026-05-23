@@ -593,69 +593,107 @@ External Connectivity (Phase 3 — opt-in only, not yet built)
 
 ---
 
+### Phase 3 — Heatmap Landing Redesign
+
+#### Benchmark Overlay on Portfolio Timeline
+- [x] Added `requirements-optional.txt` with `yfinance>=0.2` pinned
+- [x] Added guarded `yfinance` import and `fetch_benchmark()` function to `core/loader.py`
+- [x] Added `YELLOW` color constant to `charts/chart_engine.py`
+- [x] Extended `plot_portfolio_timeline()` with an optional `benchmarks` dict parameter
+- [x] Wired opt-in checkbox and SPY/QQQ multiselect into the Timeline tab in `app.py`
+- [x] Portfolio and benchmarks normalized to % return from the first snapshot date for shared-axis comparison
+- [x] App remains fully offline without `yfinance` — strictly optional dependency
+- [x] Added 4 mocked benchmark tests to `tests/test_loader.py` (26 total, all passing)
+- [x] Documented optional dependency in `README.md` and `CONTRIBUTING.md`
+
+#### Sector Classification Column (Step 3.1)
+- [x] Created `core/sectors.json` with a 103-ticker lookup dict (S&P 500 + common ETFs + portable coverage)
+- [x] Added `import json` and `from pathlib import Path` to `core/loader.py`
+- [x] Added module-level sector loader: `_SECTORS_PATH`, `_SECTOR_MAP`, and `_get_sector()` helper after the `PLAIN_NUMERIC` constant
+- [x] Added `df["sector"] = df["symbol"].map(_get_sector)` as the second derived column in `load_m1_csv()`
+- [x] Smoke test validates ASML → Electronic Technology, GOOG → Technology Services, MA → Finance, unmapped → Other
+
+---
+
 ## Work In Progress
 
 > Ordered by safe, methodical development sequence. Each item builds on or is
 > independent of the previous. Phase 3 items should be completed before Phase 4 begins.
 
-### Phase 3 — Benchmark Comparison and Risk Views
+### Phase 3 — Heatmap Landing Redesign
 
-#### 3.1 — Benchmark Overlay on Timeline Chart
+> Six gated Claude Code prompts replacing the original mini-cards-plus-radar concept.
+> The radar chart concept survives as its own tab; the heatmap becomes the primary landing
+> visualization. Each step ships, smoke-tests, and gates the next prompt — no queuing.
 
-- [ ] Create `requirements-optional.txt` with `yfinance>=0.2` pinned
-- [ ] Update `README.md` and `CONTRIBUTING.md` to document optional dependencies
-- [ ] Add `fetch_benchmark()` function in `core/loader.py`
-  - Accepts `tickers: list[str]`, `start: str`, `end: str`
-  - Returns a `dict[str, pd.Series]` of normalized % returns indexed by date
-  - Handles network errors gracefully, returning `None` with a warning
-- [ ] Add opt-in checkbox to Timeline tab: "Show benchmark comparison"
-  - Renders only when multi-snapshot mode is active
-  - Clearly labeled: "Requires internet connection"
-- [ ] Add ticker multiselect: `["SPY", "QQQ"]` (expandable in future)
-- [ ] Extend `plot_portfolio_timeline()` to accept optional `benchmarks` dict
-  - Convert portfolio value to % return from first snapshot date
-  - Overlay one trace per benchmark, dashed lines, MUTED/YELLOW colors
-  - Update chart title to "Portfolio vs Benchmark — % Return"
-- [ ] Add benchmark fetch tests (mocked network call in test suite)
-- [ ] Validate date alignment: benchmark dates interpolated or filtered to snapshot dates
+#### 3.1 — Sector Classification Column ✅ Complete
+> See Work Completed for details.
 
-#### 3.2 — Concentration Metrics Tab
+#### 3.2 — Snapshot Change Computation
+- [ ] Add `compute_snapshot_change(snapshots: dict) -> dict` to `core/loader.py`
+- [ ] Return dict with `delta_dollar`, `delta_pct`, `days_elapsed`, `positions_added`, `positions_closed`
+- [ ] Pure function: no UI, no plotting, no I/O
+- [ ] Handle position-set mismatches gracefully (new and closed positions between snapshots)
+- [ ] Smoke test validates returned dict shape against known two-snapshot input
+- [ ] Hard constraint: no changes to `chart_engine.py` or `app.py`
 
-- [ ] Compute HHI in `core/loader.py` or as standalone utility
+#### 3.3 — Heatmap Chart Function
+- [ ] Add `plot_heatmap(df) -> go.Figure` to `charts/chart_engine.py`
+- [ ] Plotly treemap with positions grouped by the `sector` column
+- [ ] Size by `current_value`, color by `unrealized_gain_pct`
+- [ ] Reuses existing palette constants (`BASE_LAYOUT`, `PALETTE`)
+- [ ] Smoke test renders the figure standalone and verifies the trace type
+- [ ] Hard constraint: no changes to `loader.py`
+
+#### 3.4 — New Landing Layout
+- [ ] Replace the existing 6-card metric strip with a 5-card strip in `app.py`:
+  Total Value · Gain/Loss · Snapshot Change · Positions · Best Performer
+- [ ] Render `plot_heatmap()` above existing tabs as the primary landing view
+- [ ] Demote the raw holdings table to a collapsible expander below the heatmap
+- [ ] Add "Overview" as the new default tab pointing to the heatmap landing
+- [ ] All 10 existing tab functions stay untouched
+- [ ] Visual review against the agreed mockup before merging
+
+#### 3.5 — Click-to-Detail Panel
+- [ ] Wire `st.plotly_chart(on_select="rerun")` to capture heatmap tile clicks — no new dependencies
+- [ ] Add `charts/detail_panel.py` with per-position visualization functions
+- [ ] Detail panel renders: value-over-time line, cost basis trend, snapshot-to-snapshot quantity changes
+- [ ] Panel uses only CSV-derivable data — no external calls
+- [ ] Click outside the panel closes it
+
+#### 3.6 — Responsiveness Pass (Scoped)
+- [ ] KPI strip wraps cleanly across breakpoints: 5 → 3×2 → 2×3 → 1×5
+- [ ] Heatmap maintains readable tile sizes down to 480px viewport
+- [ ] Scope strictly limited to the new dashboard area; do not touch existing tab visualizations
+- [ ] Visual review at three breakpoints (1920px, 1024px, 480px)
+
+---
+
+### Phase 4 — Concentration Metrics
+
+> Promoted from the original Phase 3 scope. Adds a numeric concentration view that complements
+> the heatmap's visual allocation read with HHI, top-N weight, and weight distribution.
+
+#### 4.1 — Concentration Metrics Tab
+
+- [ ] Compute HHI in `core/loader.py` or as a standalone utility
   - `hhi(df)` → float on scale 0–10,000 (10,000 = one position, 10,000/n = equal weight)
-  - Implement alongside existing radar `diversification` score for consistency
+  - Implement alongside the existing radar `diversification` score for consistency
 - [ ] Compute `top_n_weight(df, n)` → float (cumulative % of portfolio in top N positions)
 - [ ] New chart function: `plot_weight_histogram(df)` → `go.Figure`
   - Histogram of portfolio weight percentages across all positions
   - Bin width configurable or automatic
-- [ ] Add "⚖️ Concentration" tab to single-snapshot mode
+- [ ] Add "Concentration" tab to single-snapshot mode
   - HHI score card with interpretation label (diversified / moderate / concentrated)
   - `st.slider` for N in top-N weight; metric updates reactively
   - Weight histogram chart below
 - [ ] Add concentration metric tests
 
-#### 3.3 — Sector Mapping
-
-- [ ] Add second optional file uploader for `sector_map.csv`
-  - Accepts columns: `symbol`, `sector`
-  - Validate schema; surface clear error if columns missing
-- [ ] Add `merge_sector_map(df, sector_df)` in `core/loader.py`
-  - Left join on `symbol`
-  - Unmapped symbols assigned sector `"Unknown"`
-  - Return warning list of unmapped symbols for display
-- [ ] New chart function: `plot_sector_allocation(df)` → `go.Figure`
-  - Donut chart grouped by sector, not by position
-  - Sector-level hover showing total value and weight
-- [ ] Update `snapshot_diff()` to include sector-level delta when sector map present
-  - New sectors, closed sectors, weight shift per sector
-- [ ] Sector mapping tests with synthetic `sector_map.csv` fixture
-- [ ] Update `docs/implementation-plan.md` Phase 3 status to Complete on each step
-
 ---
 
-### Phase 4 — Packaging and Distribution
+### Phase 5 — Packaging and Distribution
 
-#### 4.1 — Dockerfile
+#### 5.1 — Dockerfile
 
 - [ ] Write `Dockerfile` targeting Python 3.12-slim
 - [ ] `COPY requirements.txt .` and `RUN pip install` in a separate layer for cache
@@ -665,7 +703,7 @@ External Connectivity (Phase 3 — opt-in only, not yet built)
 - [ ] Add `.dockerignore` excluding `venv/`, `data/`, `*.csv`, `.git`
 - [ ] Document Docker usage in `README.md`
 
-#### 4.2 — pyproject.toml and PyPI
+#### 5.2 — pyproject.toml and PyPI
 
 - [ ] Replace `requirements.txt` with `pyproject.toml`
   - `[project]` metadata: name, version, description, authors, license, classifiers
@@ -677,7 +715,7 @@ External Connectivity (Phase 3 — opt-in only, not yet built)
 - [ ] Test PyPI publish to TestPyPI first
 - [ ] Document `pip install m1-portfolio-kit && m1kit` in `README.md`
 
-#### 4.3 — Final Pre-Launch Cleanup
+#### 5.3 — Final Pre-Launch Cleanup
 
 - [ ] Final README pass: hero screenshot, badges (CI, PyPI, license), feature table
 - [ ] Final `CONTRIBUTING.md` pass: Docker workflow, optional dependency notes
@@ -828,4 +866,4 @@ into the M1 workflow itself and makes every M1 user a potential daily-active use
 
 ---
 
-*Last updated: 2026-05-18 | Phase 2 complete | Phase 3 ready to build*
+*Last updated: 2026-05-22 | Phase 3.1 complete | Heatmap landing redesign in progress*
