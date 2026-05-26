@@ -152,6 +152,18 @@ def portfolio_summary(df: pd.DataFrame) -> dict:
     }
 
 
+def hhi(df: pd.DataFrame) -> float:
+    """Herfindahl-Hirschman Index on portfolio weight. Range: 0–10,000."""
+    weights = df["portfolio_weight_pct"] / 100
+    return float((weights ** 2).sum() * 10_000)
+
+
+def top_n_weight(df: pd.DataFrame, n: int) -> float:
+    """Cumulative portfolio weight of the top N positions by current value."""
+    n = min(n, len(df))
+    return float(df.nlargest(n, "portfolio_weight_pct")["portfolio_weight_pct"].sum())
+
+
 def parse_snapshot_date(filename: str) -> str | None:
     """Return the first parseable date found in a filename as YYYY-MM-DD, or None."""
     m = _DATE_ISO.search(filename)

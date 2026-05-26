@@ -315,6 +315,22 @@ def plot_portfolio_radar(df: pd.DataFrame) -> go.Figure:
     return fig
 
 
+# ── Chart 7: Portfolio Weight Distribution ───────────────────────────────────
+def plot_weight_histogram(df: pd.DataFrame) -> go.Figure:
+    fig = go.Figure(go.Histogram(
+        x             = df["portfolio_weight_pct"],
+        nbinsx        = 20,
+        marker        = dict(color=ACCENT, line=dict(color=GRID, width=1)),
+        hovertemplate = "Weight: %{x:.1f}%<br>Positions: %{y}<extra></extra>",
+    ))
+    fig.update_layout(
+        xaxis_title = "Portfolio Weight (%)",
+        yaxis_title = "Positions",
+        bargap      = 0.05,
+    )
+    return _apply_base(fig, "Portfolio Weight Distribution")
+
+
 # ── Phase 2 charts ────────────────────────────────────────────────────────────
 
 def plot_portfolio_timeline(snapshots: dict, benchmarks: dict | None = None) -> go.Figure:

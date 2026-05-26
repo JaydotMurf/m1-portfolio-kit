@@ -21,6 +21,8 @@ from core.loader import (
     snapshot_diff,
     compute_snapshot_change,
     fetch_benchmark,
+    hhi,
+    top_n_weight,
     _YFINANCE_AVAILABLE,
 )
 from charts.chart_engine import (
@@ -33,6 +35,7 @@ from charts.chart_engine import (
     plot_portfolio_timeline,
     plot_position_delta,
     plot_heatmap,
+    plot_weight_histogram,
 )
 from charts.detail_panel import (
     plot_position_value,
@@ -314,7 +317,7 @@ if len(uploaded_files) == 1:
     st.divider()
 
     (tab_overview,
-     tab1, tab2, tab3, tab4, tab5, tab6) = st.tabs([
+     tab1, tab2, tab3, tab4, tab5, tab6, tab_conc) = st.tabs([
         "🗺️  Overview",
         "🥧  Allocation",
         "💵  Gain / Loss ($)",
@@ -322,6 +325,7 @@ if len(uploaded_files) == 1:
         "⚖️  Cost vs Value",
         "🎯  Return vs Weight",
         "🕸️  Radar",
+        "📊  Concentration",
     ])
 
     with tab_overview:
@@ -340,6 +344,29 @@ if len(uploaded_files) == 1:
     with tab4: st.plotly_chart(plot_cost_vs_value(df),     width='stretch')
     with tab5: st.plotly_chart(plot_return_vs_weight(df),  width='stretch')
     with tab6: st.plotly_chart(plot_portfolio_radar(df),   width='stretch')
+
+    with tab_conc:
+        hhi_val = hhi(df)
+        if hhi_val < 1_000:
+            hhi_label = "Diversified"
+        elif hhi_val < 2_500:
+            hhi_label = "Moderate"
+        else:
+            hhi_label = "Concentrated"
+
+        c1, c2 = st.columns(2)
+        c1.metric("HHI Score", f"{hhi_val:.0f}", hhi_label)
+
+        n = st.slider(
+            "Top N positions",
+            min_value=1,
+            max_value=min(10, len(df)),
+            value=min(5, len(df)),
+            key="conc_top_n",
+        )
+        c2.metric(f"Top-{n} Weight", f"{top_n_weight(df, n):.1f}%")
+
+        st.plotly_chart(plot_weight_histogram(df), width='stretch')
 
 
 # ── Phase 2: multi-snapshot ───────────────────────────────────────────────────

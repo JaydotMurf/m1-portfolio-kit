@@ -11,6 +11,8 @@ from core.loader import (
     snapshot_diff,
     compute_snapshot_change,
     fetch_benchmark,
+    hhi,
+    top_n_weight,
 )
 from charts.chart_engine import (
     plot_allocation,
@@ -21,6 +23,7 @@ from charts.chart_engine import (
     plot_portfolio_timeline,
     plot_position_delta,
     plot_heatmap,
+    plot_weight_histogram,
 )
 
 
@@ -311,3 +314,39 @@ def test_plot_portfolio_timeline_with_benchmarks_returns_figure():
     )
     fig = plot_portfolio_timeline(make_snapshots(), {"SPY": bench_series})
     assert isinstance(fig, go.Figure)
+
+
+# ── Phase 4.1: concentration metrics ─────────────────────────────────────────
+
+def test_hhi_equal_weight():
+    # SAMPLE_CSV: AAPL 2000, TSLA 900, MSFT 3000 — total 5900
+    # weights: ~33.9%, ~15.25%, ~50.85%  → not equal weight, just sanity-check bounds
+    result = hhi(make_df())
+    assert 0 < result < 10_000
+
+
+def test_hhi_monopoly():
+    import io
+    single = """\
+Symbol,Name,Quantity,Avg. Price,Cost Basis,Unrealized Gain ($),Unrealized Gain (%),Value
+AAPL,Apple Inc.,10,100.00,1000.00,0.00,0.00,1000.00
+"""
+    df = load_m1_csv(io.StringIO(single))
+    assert hhi(df) == pytest.approx(10_000.0)
+
+
+def test_top_n_weight_basic():
+    df = make_df()
+    # top 1 should equal the largest position's weight
+    largest_weight = df["portfolio_weight_pct"].max()
+    assert top_n_weight(df, 1) == pytest.approx(largest_weight)
+
+
+def test_top_n_weight_clamps_to_len():
+    df = make_df()  # 3 positions
+    # n=100 should not raise and should equal 100% (sum of all positions)
+    assert top_n_weight(df, 100) == pytest.approx(100.0, abs=0.01)
+
+
+def test_plot_weight_histogram_returns_figure():
+    assert isinstance(plot_weight_histogram(make_df()), go.Figure)

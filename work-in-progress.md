@@ -674,20 +674,13 @@ External Connectivity (Phase 3 — opt-in only, not yet built)
 > Promoted from the original Phase 3 scope. Adds a numeric concentration view that complements
 > the heatmap's visual allocation read with HHI, top-N weight, and weight distribution.
 
-#### 4.1 — Concentration Metrics Tab
+#### 4.1 — Concentration Metrics Tab ✅ Complete
 
-- [ ] Compute HHI in `core/loader.py` or as a standalone utility
-  - `hhi(df)` → float on scale 0–10,000 (10,000 = one position, 10,000/n = equal weight)
-  - Implement alongside the existing radar `diversification` score for consistency
-- [ ] Compute `top_n_weight(df, n)` → float (cumulative % of portfolio in top N positions)
-- [ ] New chart function: `plot_weight_histogram(df)` → `go.Figure`
-  - Histogram of portfolio weight percentages across all positions
-  - Bin width configurable or automatic
-- [ ] Add "Concentration" tab to single-snapshot mode
-  - HHI score card with interpretation label (diversified / moderate / concentrated)
-  - `st.slider` for N in top-N weight; metric updates reactively
-  - Weight histogram chart below
-- [ ] Add concentration metric tests
+- [x] `hhi(df)` in `core/loader.py` → float 0–10,000
+- [x] `top_n_weight(df, n)` in `core/loader.py` → cumulative % of top N positions; n clamped to len(df)
+- [x] `plot_weight_histogram(df)` in `charts/chart_engine.py` → `go.Figure` (Histogram, ACCENT fill)
+- [x] "📊 Concentration" tab in `app.py` (single-snapshot only): HHI card + label, Top-N slider + metric, histogram
+- [x] 5 new tests in `tests/test_loader.py` (42 total, all passing)
 
 ---
 
@@ -866,4 +859,4 @@ into the M1 workflow itself and makes every M1 user a potential daily-active use
 
 ---
 
-*Last updated: 2026-05-22 | Phase 3.1 complete | Heatmap landing redesign in progress*
+*Last updated: 2026-05-26 | Phase 4.1 complete | Concentration metrics tab shipped*
