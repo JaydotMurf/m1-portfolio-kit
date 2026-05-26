@@ -40,6 +40,18 @@ Upload multiple CSVs to track your portfolio over time:
 
 ## Setup
 
+### pip (quickest)
+
+```bash
+pip install m1-portfolio-kit
+m1kit
+```
+
+The app opens at `http://localhost:8501`.
+To enable the optional SPY/QQQ benchmark overlay: `pip install "m1-portfolio-kit[benchmarks]"`
+
+### From source
+
 Requires Python 3.10+
 
 ```bash

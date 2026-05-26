@@ -1,0 +1,50 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "m1-portfolio-kit"
+version = "0.1.0"
+description = "Interactive portfolio visualizations for M1 Finance investors"
+readme = "README.md"
+license = "MIT"
+authors = [
+    { name = "Jerraill Murphy", email = "murphyjerraill@gmail.com" },
+]
+requires-python = ">=3.10"
+dependencies = [
+    "streamlit>=1.35.0",
+    "pandas>=2.0.0",
+    "numpy>=1.26.0",
+    "plotly>=5.20.0",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "Topic :: Office/Business :: Financial",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.optional-dependencies]
+benchmarks = ["yfinance>=0.2"]
+
+[project.scripts]
+m1kit = "cli:main"
+
+[project.urls]
+Homepage = "https://github.com/JaydotMurf/m1-portfolio-kit"
+Repository = "https://github.com/JaydotMurf/m1-portfolio-kit"
+Issues = "https://github.com/JaydotMurf/m1-portfolio-kit/issues"
+
+[tool.hatch.build.targets.wheel]
+include = [
+    "app.py",
+    "cli.py",
+    "core/",
+    "charts/",
+    ".streamlit/",
+]

@@ -694,17 +694,20 @@ External Connectivity (Phase 3 — opt-in only, not yet built)
 - [x] `.dockerignore` excludes `venv/`, `data/`, `*.csv`, `.git`, tests, docs, dev files; keeps `.streamlit/` for dark theme
 - [x] Docker quick-start added to `README.md` (two-command happy path + yfinance note)
 
-#### 5.2 — pyproject.toml and PyPI
+#### 5.2 — pyproject.toml and PyPI ✅ Complete
 
-- [ ] Replace `requirements.txt` with `pyproject.toml`
-  - `[project]` metadata: name, version, description, authors, license, classifiers
-  - `[project.dependencies]`: same pins as current `requirements.txt`
-  - `[project.optional-dependencies]`: `benchmarks = ["yfinance>=0.2"]`
-  - `[project.scripts]`: `m1kit = "app:main"` (wrap `app.py` in a callable)
-- [ ] Test `pip install -e .` locally
-- [ ] GitHub Actions release workflow: on tag push → `build` + `twine upload`
-- [ ] Test PyPI publish to TestPyPI first
-- [ ] Document `pip install m1-portfolio-kit && m1kit` in `README.md`
+- [x] `pyproject.toml` with hatchling build backend, full project metadata, deps, `benchmarks` optional extra, `m1kit` CLI entry point
+- [x] `cli.py` — thin entry point that delegates to `streamlit run app.py` via subprocess (keeps app.py unchanged)
+- [x] `python -m build` verified locally — produces `.whl` and `.tar.gz` cleanly
+- [x] `pip install -e . && m1kit --help` confirmed working
+- [x] `.github/workflows/release.yml` — triggers on `v*` tags, builds dist, publishes to PyPI via OIDC trusted publishing
+- [x] `README.md` updated: `pip install m1-portfolio-kit && m1kit` as the primary setup option
+- [x] `requirements.txt` kept as-is for Docker and CI backwards compatibility
+
+**One-time PyPI setup required before first release:**
+1. Go to https://pypi.org/manage/account/publishing/ → add trusted publisher
+   - Owner: `JaydotMurf` · Repo: `m1-portfolio-kit` · Workflow: `release.yml` · Environment: `release`
+2. Create a `release` environment in GitHub repo Settings → Environments
 
 #### 5.3 — Final Pre-Launch Cleanup
 
@@ -857,4 +860,4 @@ into the M1 workflow itself and makes every M1 user a potential daily-active use
 
 ---
 
-*Last updated: 2026-05-26 | Phase 5.1 complete | Dockerfile and .dockerignore added*
+*Last updated: 2026-05-26 | Phase 5.2 complete | pyproject.toml, cli.py, and release workflow added*
