@@ -1,0 +1,15 @@
+venv/
+data/
+*.csv
+.git
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+tests/
+docs/
+work-in-progress.md
+CONTRIBUTING.md
+requirements-dev.txt
+requirements-optional.txt
+.claude/

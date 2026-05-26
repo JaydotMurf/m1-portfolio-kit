@@ -54,6 +54,17 @@ To enable the optional benchmark overlay (SPY/QQQ comparison on the Timeline tab
 
 The app opens at `http://localhost:8501`.
 
+### Docker (no Python required)
+
+```bash
+docker build -t m1-portfolio-kit .
+docker run -p 8501:8501 m1-portfolio-kit
+```
+
+The app opens at `http://localhost:8501`.
+To enable the optional SPY/QQQ benchmark overlay, add `RUN pip install yfinance` after the
+`pip install -r requirements.txt` line in the Dockerfile before building.
+
 ---
 
 ## Getting your M1 CSV

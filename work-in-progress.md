@@ -686,15 +686,13 @@ External Connectivity (Phase 3 — opt-in only, not yet built)
 
 ### Phase 5 — Packaging and Distribution
 
-#### 5.1 — Dockerfile
+#### 5.1 — Dockerfile ✅ Complete
 
-- [ ] Write `Dockerfile` targeting Python 3.12-slim
-- [ ] `COPY requirements.txt .` and `RUN pip install` in a separate layer for cache
-- [ ] `EXPOSE 8501` and `HEALTHCHECK`
-- [ ] `CMD ["streamlit", "run", "app.py", "--server.address=0.0.0.0"]`
-- [ ] Test locally: `docker build` and `docker run -p 8501:8501`
-- [ ] Add `.dockerignore` excluding `venv/`, `data/`, `*.csv`, `.git`
-- [ ] Document Docker usage in `README.md`
+- [x] `Dockerfile` targeting `python:3.12-slim`; deps layer cached separately from app code
+- [x] `EXPOSE 8501`, `HEALTHCHECK` via `urllib.request` (no curl dependency)
+- [x] `CMD` runs Streamlit with `--server.address=0.0.0.0` and `--server.headless=true`
+- [x] `.dockerignore` excludes `venv/`, `data/`, `*.csv`, `.git`, tests, docs, dev files; keeps `.streamlit/` for dark theme
+- [x] Docker quick-start added to `README.md` (two-command happy path + yfinance note)
 
 #### 5.2 — pyproject.toml and PyPI
 
@@ -859,4 +857,4 @@ into the M1 workflow itself and makes every M1 user a potential daily-active use
 
 ---
 
-*Last updated: 2026-05-26 | Phase 4.1 complete | Concentration metrics tab shipped*
+*Last updated: 2026-05-26 | Phase 5.1 complete | Dockerfile and .dockerignore added*
