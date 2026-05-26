@@ -5,7 +5,7 @@ interactive visualizations that M1's built-in interface doesn't offer.
 
 Runs entirely on your local machine — your financial data never leaves your computer.
 
-![Dashboard](docs/screenshot-02.png)
+![Dashboard](docs/web-app-preview.png)
 
 ---
 
@@ -24,6 +24,7 @@ Runs entirely on your local machine — your financial data never leaves your co
 ### Multi-Snapshot Time-Series Tracking
 
 Upload multiple CSVs to track your portfolio over time:
+
 - **📅 Timeline** — Line chart of total portfolio value across snapshots
 - **📈 Position Trend** — Track individual position value and weight across time
 - **🔄 Snapshot Diff** — Compare oldest vs newest snapshot side-by-side (new positions, closed positions, value changes)
