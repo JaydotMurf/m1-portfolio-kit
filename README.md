@@ -1,5 +1,9 @@
 # M1 Portfolio Kit
 
+[![CI](https://github.com/JaydotMurf/m1-portfolio-kit/actions/workflows/smoke.yml/badge.svg)](https://github.com/JaydotMurf/m1-portfolio-kit/actions/workflows/smoke.yml)
+[![PyPI](https://img.shields.io/pypi/v/m1-portfolio-kit)](https://pypi.org/project/m1-portfolio-kit/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Better charts for your M1 Finance portfolio. Drop in your holdings CSV and get
 interactive visualizations that M1's built-in interface doesn't offer.
 
@@ -11,30 +15,52 @@ Runs entirely on your local machine — your financial data never leaves your co
 
 ## Features
 
-### Charts (Five Interactive Tabs)
+### Portfolio Heatmap (Landing View)
 
-| Tab                 | What it answers                                                      |
-| ------------------- | -------------------------------------------------------------------- |
-| 🥧 Allocation       | What percentage of my portfolio is each position?                    |
-| 💵 Gain / Loss ($)  | Which positions are making or losing me the most dollars?            |
-| 📊 Gain / Loss (%)  | Which positions have the best/worst return rate, regardless of size? |
-| ⚖️ Cost vs Value    | What did I pay vs what is it worth now?                              |
-| 🎯 Return vs Weight | Are my biggest positions also my best performers?                    |
+A treemap heatmap greets you on upload — positions grouped by sector, sized by current value,
+colored by unrealized return. Click any tile to open a detail panel showing value, cost basis,
+return, and snapshot-over-snapshot trends for that position.
+
+### Charts
+
+| Tab | What it answers |
+| --- | --- |
+| 🥧 Allocation | What percentage of my portfolio is each position? |
+| 💵 Gain / Loss ($) | Which positions are making or losing me the most dollars? |
+| 📊 Gain / Loss (%) | Which positions have the best/worst return rate, regardless of size? |
+| ⚖️ Cost vs Value | What did I pay vs what is it worth now? |
+| 🎯 Return vs Weight | Are my biggest positions also my best performers? |
+| 🕸️ Radar | How does my portfolio score across performance, diversification, and efficiency? |
+| 📊 Concentration | How concentrated is my portfolio? HHI score, top-N weight, weight distribution. |
 
 ### Multi-Snapshot Time-Series Tracking
 
-Upload multiple CSVs to track your portfolio over time:
+Upload multiple CSVs (one per export date) to track your portfolio over time:
 
-- **📅 Timeline** — Line chart of total portfolio value across snapshots
+- **📅 Timeline** — Line chart of total portfolio value across snapshots; optional SPY/QQQ overlay
 - **📈 Position Trend** — Track individual position value and weight across time
-- **🔄 Snapshot Diff** — Compare oldest vs newest snapshot side-by-side (new positions, closed positions, value changes)
+- **🔄 Snapshot Diff** — Compare oldest vs newest: held positions with deltas, new entries, closed positions
 
-### User Experience
+### Benchmark Comparison (opt-in)
 
-- **Dark-only theme** — Optimized for financial data visibility, no light mode distraction
-- **Color-coded gains/losses** — Green (▲) for gains, red (▼) for losses in the holdings table
-- **Professional table formatting** — Title-case headers, clean numeric formatting
-- **Local privacy** — All data stays on your machine; no network calls except optional benchmarks (Phase 3)
+Enable SPY and/or QQQ overlays on the Timeline tab. Both portfolio and benchmarks are normalized
+to % return from the first snapshot date for a fair comparison. Requires internet — the checkbox
+is clearly labeled and off by default.
+
+### Concentration Analysis
+
+The Concentration tab gives you three lenses on portfolio concentration — all computed from your
+CSV with no external data:
+
+- **HHI Score** — Herfindahl-Hirschman Index (0–10,000). Labeled: Diversified / Moderate / Concentrated.
+- **Top-N Weight** — Cumulative % held in your top N positions. Slider adjustable.
+- **Weight Distribution** — Histogram of position weights across your portfolio.
+
+### Privacy Guarantee
+
+No data is written to disk. Uploaded CSVs live in memory for the browser session only.
+Phase 1 and Phase 2 make zero network requests. The benchmark overlay is strictly opt-in
+and clearly labeled.
 
 ---
 
@@ -50,6 +76,17 @@ m1kit
 The app opens at `http://localhost:8501`.
 To enable the optional SPY/QQQ benchmark overlay: `pip install "m1-portfolio-kit[benchmarks]"`
 
+### Docker (no Python required)
+
+```bash
+docker build -t m1-portfolio-kit .
+docker run -p 8501:8501 m1-portfolio-kit
+```
+
+The app opens at `http://localhost:8501`.
+To enable the optional SPY/QQQ benchmark overlay, add `RUN pip install yfinance` after the
+`pip install -r requirements.txt` line in the Dockerfile before building.
+
 ### From source
 
 Requires Python 3.10+
@@ -61,21 +98,6 @@ python -m venv venv && source venv/bin/activate  # Windows: venv\Scripts\activat
 pip install -r requirements.txt
 streamlit run app.py
 ```
-
-To enable the optional benchmark overlay (SPY/QQQ comparison on the Timeline tab), install the optional dependency: `pip install yfinance`
-
-The app opens at `http://localhost:8501`.
-
-### Docker (no Python required)
-
-```bash
-docker build -t m1-portfolio-kit .
-docker run -p 8501:8501 m1-portfolio-kit
-```
-
-The app opens at `http://localhost:8501`.
-To enable the optional SPY/QQQ benchmark overlay, add `RUN pip install yfinance` after the
-`pip install -r requirements.txt` line in the Dockerfile before building.
 
 ---
 
@@ -101,10 +123,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, test, and PR instructions.
 
 ## Roadmap
 
-- [x] **Phase 1** — Single snapshot analysis (5 charts, summary metrics, local privacy)
+- [x] **Phase 1** — Single snapshot analysis (heatmap, 7 charts, summary metrics, radar)
 - [x] **Phase 2** — Multi-snapshot time-series tracking (timeline, position trends, snapshot diffs)
-- [ ] **Phase 3** — Benchmark comparison and risk metrics (SPY/QQQ overlay, HHI, sector mapping)
-- [ ] **Phase 4** — Packaging and distribution (Docker, PyPI, releases)
+- [x] **Phase 3** — Benchmark overlay, sector classification, heatmap landing, click-to-detail
+- [x] **Phase 4** — Concentration metrics (HHI, top-N weight, weight histogram)
+- [x] **Phase 5** — Packaging and distribution (Docker, PyPI, `m1kit` CLI)
 
 ---
 

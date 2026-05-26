@@ -709,14 +709,19 @@ External Connectivity (Phase 3 — opt-in only, not yet built)
    - Owner: `JaydotMurf` · Repo: `m1-portfolio-kit` · Workflow: `release.yml` · Environment: `release`
 2. Create a `release` environment in GitHub repo Settings → Environments
 
-#### 5.3 — Final Pre-Launch Cleanup
+#### 5.3 — Final Pre-Launch Cleanup ✅ Complete
 
-- [ ] Final README pass: hero screenshot, badges (CI, PyPI, license), feature table
-- [ ] Final `CONTRIBUTING.md` pass: Docker workflow, optional dependency notes
-- [ ] Convert `work-in-progress.md` content into final README sections
-- [ ] Add GitHub issue templates: bug report, feature request
-- [ ] Tag `v1.0.0` release on GitHub
-- [ ] Verify CI badge is green on main branch
+- [x] README: CI/PyPI/license badges; expanded Features (heatmap, concentration, benchmarks); updated Roadmap
+- [x] CONTRIBUTING.md: Docker section, pip extras syntax, updated ground rules
+- [x] GitHub issue templates: bug report and feature request
+- [x] `pyproject.toml` bumped to `1.0.0`
+- [ ] Push `v1.0.0` tag → triggers PyPI release workflow (manual step — see below)
+
+**To publish v1.0.0:**
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
 
 ---
 
@@ -860,4 +865,4 @@ into the M1 workflow itself and makes every M1 user a potential daily-active use
 
 ---
 
-*Last updated: 2026-05-26 | Phase 5.2 complete | pyproject.toml, cli.py, and release workflow added*
+*Last updated: 2026-05-26 | Phase 5.3 complete | v1.0.0 ready to tag and release*

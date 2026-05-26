@@ -2,6 +2,8 @@
 
 ## Setup
 
+### From source
+
 ```bash
 git clone https://github.com/JaydotMurf/m1-portfolio-kit.git
 cd m1-portfolio-kit
@@ -10,11 +12,21 @@ pip install -r requirements.txt -r requirements-dev.txt
 streamlit run app.py
 ```
 
-To enable Phase 3 features that require network access (benchmark overlay), install optional dependencies:
+To enable the optional benchmark overlay (SPY/QQQ on the Timeline tab):
 
 ```bash
-pip install -r requirements-optional.txt
+pip install ".[benchmarks]"
 ```
+
+### Docker
+
+```bash
+docker build -t m1-portfolio-kit .
+docker run -p 8501:8501 m1-portfolio-kit
+```
+
+OrbStack is the recommended Docker runtime on Mac (lighter than Docker Desktop):
+`brew install --cask orbstack`
 
 ## Running tests
 
@@ -27,9 +39,10 @@ All tests must pass before opening a pull request. CI runs the same suite on eve
 ## Ground rules
 
 - **`core/loader.py` owns the M1 CSV format.** Raw column names (`Symbol`, `Avg. Price`, etc.) must not appear anywhere else.
-- **No new packages** without updating `requirements.txt` and noting the reason in the PR.
-- **Phase 1 scope only.** Features planned for Phase 2+ (multi-snapshot, benchmarks) are not in scope until Phase 1 is fully shipped.
-- **No hardcoded tickers or personal holdings data** anywhere in the codebase.
+- **No new runtime packages** without updating `pyproject.toml` (and `requirements.txt` for Docker/CI compatibility) and noting the reason in the PR.
+- **Optional dependencies** (e.g. `yfinance`) go in `requirements-optional.txt` and the `[project.optional-dependencies]` section of `pyproject.toml`. They must be guarded with `try/except ImportError` and never imported unconditionally.
+- **No hardcoded tickers or personal holdings data** anywhere in the codebase. Tests use synthetic CSV fixtures only.
+- **All tests must pass** before committing. Do not open a PR with failing tests.
 
 ## Opening a PR
 
