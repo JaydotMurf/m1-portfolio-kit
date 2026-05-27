@@ -33,7 +33,7 @@ Three-layer pipeline: CSV → loader → charts → Streamlit UI.
   - `load_snapshots(files, date_map)` — builds a `dict[date_str → DataFrame]`, sorted ascending
   - `snapshot_diff(snapshots)` — outer-merges oldest vs newest snapshot; tags rows `held / new / closed`
 
-- **`charts/chart_engine.py`** — eight Plotly chart functions, each accepting a normalized
+- **`charts/chart_engine.py`** — ten Plotly chart functions, each accepting a normalized
   DataFrame or snapshots dict and returning a `go.Figure`. All share `BASE_LAYOUT` and
   `_apply_base()`. Design constants are defined at the top of this file and must be used
   exclusively — never reference raw hex values in chart code. Functions:
@@ -44,30 +44,39 @@ Three-layer pipeline: CSV → loader → charts → Streamlit UI.
   - `plot_return_vs_weight(df)` — scatter/bubble, return % vs portfolio weight
   - `plot_portfolio_radar(df)` — five-dimension radar (performance, win rate, diversification,
     capital efficiency, gain breadth); all scores computed from CSV only, no external data
-  - `plot_portfolio_timeline(snapshots)` — Phase 2 line chart of total value over time
-  - `plot_position_delta(snapshots, symbol)` — Phase 2 dual-axis trend for one ticker
+  - `plot_portfolio_timeline(snapshots, benchmarks)` — line chart of total value over time;
+    optional `benchmarks` dict adds SPY/QQQ % return traces (opt-in, requires `yfinance`)
+  - `plot_position_delta(snapshots, symbol)` — dual-axis trend for one ticker
+  - `plot_heatmap(df)` — treemap grouped by sector, sized by value, colored by gain/loss %
+  - `plot_weight_histogram(df)` — histogram of position weights (Concentration tab)
+
+- **`charts/detail_panel.py`** — per-position detail charts rendered on heatmap tile click:
+  - `plot_position_value(snapshots, symbol)` — value over time
+  - `plot_position_cost(snapshots, symbol)` — cost basis over time
+  - `plot_position_quantity(snapshots, symbol)` — quantity changes over time
 
 - **`app.py`** — Streamlit entry point. Branches on `len(uploaded_files)`:
   - **Single file (Phase 1):** `load_m1_csv` → metrics → position cards → raw table →
     6-tab chart view (allocation, gain/loss $, gain/loss %, cost vs value, return vs
     weight, radar)
-  - **Multiple files (Phase 2):** date pickers → `load_snapshots` → metrics + raw table
-    on latest snapshot → 8-tab view (timeline, position trend, snapshot diff, + the 5
-    single-snapshot charts applied to the latest DataFrame)
+  - **Multiple files (Phase 2+):** date pickers → `load_snapshots` → metrics + raw table
+    on latest snapshot → tab view (timeline with optional benchmark overlay, position trend,
+    snapshot diff, + the single-snapshot charts applied to the latest DataFrame)
   - CSS injection via `st.markdown(unsafe_allow_html=True)` enforces dark theme over
     Streamlit's internal component test-IDs. `.streamlit/config.toml` locks the base
     theme. Both layers are required — do not remove either.
 
-- **`tests/test_loader.py`** — 20 pytest tests covering all loader functions and all
+- **`tests/test_loader.py`** — 42 pytest tests covering all loader functions and all
   chart functions via synthetic CSV fixtures. No real holdings data anywhere in tests.
 
 ## Internal column schema
 
 All chart and summary code uses these names exclusively:
 
-`symbol` · `name` · `quantity` · `avg_price` · `cost_basis` · `unrealized_gain_dollar` · `unrealized_gain_pct` · `current_value` · `portfolio_weight_pct`
+`symbol` · `name` · `quantity` · `avg_price` · `cost_basis` · `unrealized_gain_dollar` · `unrealized_gain_pct` · `current_value` · `portfolio_weight_pct` · `sector`
 
 `portfolio_weight_pct` is derived (not in raw CSV) — computed in `load_m1_csv`.
+`sector` is derived via `core/sectors.json` lookup — unmapped symbols default to `"Other"`.
 
 ## Design system constants
 
@@ -141,15 +150,17 @@ After completing a step and confirming tests pass, stage all changed files, writ
 conventional commit message (`feat:`, `fix:`, `docs:`, `test:`, `chore:`), and push to
 main. Do not commit if any test is failing.
 
-## Current next step
+## Current status
 
-Phase 2 complete (steps 2.1–2.4). Now beginning Phase 3.
+**v1.0.0 — all phases complete and released.**
 
-**Phase 3, Step 3.1 — Benchmark overlay on the portfolio timeline chart:**
-- Create `requirements-optional.txt` with `yfinance>=0.2`
-- Add `fetch_benchmark(tickers, start, end)` to `core/loader.py`
-- Add opt-in checkbox to the Timeline tab (multi-snapshot mode only), labeled to indicate
-  a network call
-- Extend `plot_portfolio_timeline()` to accept and render optional benchmark traces
-- Convert both portfolio and benchmark to % return from first snapshot date for comparison
-- Add mocked benchmark tests to `tests/test_loader.py`
+| Phase | Status |
+|-------|--------|
+| Phase 1 — Single Snapshot Analysis | ✅ Complete |
+| Phase 2 — Multi-Snapshot Time-Series | ✅ Complete |
+| Phase 3 — Heatmap, Benchmarks, Sectors | ✅ Complete |
+| Phase 4 — Concentration Metrics | ✅ Complete |
+| Phase 5 — Packaging and Distribution | ✅ Complete |
+
+No active roadmap step. Future work comes from the "Future Improvements" section of
+`work-in-progress.md`.
