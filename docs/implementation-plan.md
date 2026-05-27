@@ -11,7 +11,7 @@
 |-------|--------|-------|
 | **Phase 1** | ✅ Complete | All steps 1.1–1.7 done. Recent UX polish: dark-only theme, table color coding, title-case headers. |
 | **Phase 2** | ✅ Complete | All steps 2.1–2.4 done. Multi-CSV time-series tracking fully functional. |
-| **Phase 3** | ⏳ Designed, not started | Benchmark overlays, concentration metrics, sector mapping. Ready to build. |
+| **Phase 3** | ✅ Complete | Heatmap landing, click-to-detail, benchmark overlay, sector classification, responsiveness. |
 | **Phase 4** | ⏳ Not designed | Containerization and package distribution. Deferred until shipping is needed. |
 
 ---

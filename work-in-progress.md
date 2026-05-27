@@ -629,43 +629,45 @@ External Connectivity (Phase 3 — opt-in only, not yet built)
 #### 3.1 — Sector Classification Column ✅ Complete
 > See Work Completed for details.
 
-#### 3.2 — Snapshot Change Computation
-- [ ] Add `compute_snapshot_change(snapshots: dict) -> dict` to `core/loader.py`
-- [ ] Return dict with `delta_dollar`, `delta_pct`, `days_elapsed`, `positions_added`, `positions_closed`
-- [ ] Pure function: no UI, no plotting, no I/O
-- [ ] Handle position-set mismatches gracefully (new and closed positions between snapshots)
-- [ ] Smoke test validates returned dict shape against known two-snapshot input
-- [ ] Hard constraint: no changes to `chart_engine.py` or `app.py`
+#### 3.2 — Snapshot Change Computation ✅ Complete
 
-#### 3.3 — Heatmap Chart Function
-- [ ] Add `plot_heatmap(df) -> go.Figure` to `charts/chart_engine.py`
-- [ ] Plotly treemap with positions grouped by the `sector` column
-- [ ] Size by `current_value`, color by `unrealized_gain_pct`
-- [ ] Reuses existing palette constants (`BASE_LAYOUT`, `PALETTE`)
-- [ ] Smoke test renders the figure standalone and verifies the trace type
-- [ ] Hard constraint: no changes to `loader.py`
+- [x] Add `compute_snapshot_change(snapshots: dict) -> dict` to `core/loader.py`
+- [x] Return dict with `delta_dollar`, `delta_pct`, `days_elapsed`, `positions_added`, `positions_closed`
+- [x] Pure function: no UI, no plotting, no I/O
+- [x] Handle position-set mismatches gracefully (new and closed positions between snapshots)
+- [x] Smoke test validates returned dict shape against known two-snapshot input
+- [x] Hard constraint: no changes to `chart_engine.py` or `app.py`
 
-#### 3.4 — New Landing Layout
-- [ ] Replace the existing 6-card metric strip with a 5-card strip in `app.py`:
+#### 3.3 — Heatmap Chart Function ✅ Complete
+
+- [x] Add `plot_heatmap(df) -> go.Figure` to `charts/chart_engine.py`
+- [x] Plotly treemap with positions grouped by the `sector` column
+- [x] Size by `current_value`, color by `unrealized_gain_pct`
+- [x] Reuses existing palette constants (`BASE_LAYOUT`, `PALETTE`)
+- [x] Smoke test renders the figure standalone and verifies the trace type
+- [x] Hard constraint: no changes to `loader.py`
+
+#### 3.4 — New Landing Layout ✅ Complete
+
+- [x] Replace the existing 6-card metric strip with a 5-card strip in `app.py`:
   Total Value · Gain/Loss · Snapshot Change · Positions · Best Performer
-- [ ] Render `plot_heatmap()` above existing tabs as the primary landing view
-- [ ] Demote the raw holdings table to a collapsible expander below the heatmap
-- [ ] Add "Overview" as the new default tab pointing to the heatmap landing
-- [ ] All 10 existing tab functions stay untouched
-- [ ] Visual review against the agreed mockup before merging
+- [x] Render `plot_heatmap()` above existing tabs as the primary landing view
+- [x] Demote the raw holdings table to a collapsible expander below the heatmap
+- [x] Add "Overview" as the new default tab pointing to the heatmap landing
+- [x] All 10 existing tab functions stay untouched
 
-#### 3.5 — Click-to-Detail Panel
-- [ ] Wire `st.plotly_chart(on_select="rerun")` to capture heatmap tile clicks — no new dependencies
-- [ ] Add `charts/detail_panel.py` with per-position visualization functions
-- [ ] Detail panel renders: value-over-time line, cost basis trend, snapshot-to-snapshot quantity changes
-- [ ] Panel uses only CSV-derivable data — no external calls
-- [ ] Click outside the panel closes it
+#### 3.5 — Click-to-Detail Panel ✅ Complete
 
-#### 3.6 — Responsiveness Pass (Scoped)
-- [ ] KPI strip wraps cleanly across breakpoints: 5 → 3×2 → 2×3 → 1×5
-- [ ] Heatmap maintains readable tile sizes down to 480px viewport
-- [ ] Scope strictly limited to the new dashboard area; do not touch existing tab visualizations
-- [ ] Visual review at three breakpoints (1920px, 1024px, 480px)
+- [x] Wire `st.plotly_chart(on_select="rerun")` to capture heatmap tile clicks — no new dependencies
+- [x] Add `charts/detail_panel.py` with per-position visualization functions
+- [x] Detail panel renders: value-over-time line, cost basis trend, snapshot-to-snapshot quantity changes
+- [x] Panel uses only CSV-derivable data — no external calls
+
+#### 3.6 — Responsiveness Pass (Scoped) ✅ Complete
+
+- [x] KPI strip wraps cleanly across breakpoints: 5 → 3×2 → 2×3 → 1×5
+- [x] Heatmap maintains readable tile sizes down to 480px viewport
+- [x] Scope strictly limited to the new dashboard area; do not touch existing tab visualizations
 
 ---
 
@@ -715,7 +717,7 @@ External Connectivity (Phase 3 — opt-in only, not yet built)
 - [x] CONTRIBUTING.md: Docker section, pip extras syntax, updated ground rules
 - [x] GitHub issue templates: bug report and feature request
 - [x] `pyproject.toml` bumped to `1.0.0`
-- [ ] Push `v1.0.0` tag → triggers PyPI release workflow (manual step — see below)
+- [x] Push `v1.0.0` tag → triggers PyPI release workflow (manual step — see below)
 
 **To publish v1.0.0:**
 ```bash
@@ -865,4 +867,4 @@ into the M1 workflow itself and makes every M1 user a potential daily-active use
 
 ---
 
-*Last updated: 2026-05-26 | Phase 5.3 complete | v1.0.0 ready to tag and release*
+*Last updated: 2026-05-27 | Phase 3 + Phase 5 complete | v1.0.0 released*
